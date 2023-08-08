@@ -1,0 +1,85 @@
+{% extends 'base.html' %}
+{% block title %}
+Главная
+{% endblock %}
+
+{% block body %}
+<form method="post">
+    <div class="col-md-6">
+        <h4>Стартовая информация</h4>
+    </div>
+    <hr>
+    <div class="row mb-3 text-left">
+        <div class="col-3">
+            <b>Уровень подготовки:</b>
+            <select name="select_level" id="select_level" class="form-select form-select-md mb-3 me-2" aria-label=".form-select-md example">>
+                {% for level_num, level_text in const_config['levels'].items() %}
+                    <option value="{{level_num}}" {% if index_dict['level'] == level_num %} selected {% endif %} >{{level_text}}
+                {% endfor %}
+            </select>
+            <b>Планировать занятий в неделю:</b>
+            <input type="number" name="days" id="days" class="form-control mb-2" value="{{index_dict['days']}}">
+            <input type="submit" class="btn btn-success" value="Планировать">
+        </div>
+        <div class="col-3">
+            <br>
+            <button type="button" class="btn btn-outline-info" data-bs-toggle="modal" data-bs-target="#modal_filters">Фильтры</button>
+
+        </div>
+        <div class="col-6">
+            {% if plan %}
+            <span class=""><b>Выбрано:</b></span><br>
+                <b>Уровень:</b> {{ level }}<br>
+                <b>Занятий в неделе:</b> {{ plan.level_day[2:] }}<br>
+                <!-- <b>Группы мышц:</b> {{ plan.groups }}<br> -->
+                <b>Нагрузка:</b> {{ plan.strength }}<br>
+                <b>Рекомендация:</b> {{ plan.rec }}
+
+            {% else %}
+                <span class="fs-3">Для планирования введите стартовую информацию и кликните на "Планировать"</span>
+            {% endif %}
+        </div>
+    </div>
+
+    <hr>
+
+    <div class="row text-left bg-opacity-0">
+    {% if plan %}
+        {% for day in range(index_dict['days']|int) %}
+        <div class="col-6 p-3">
+            <div class="container p-3 h-100 border border-secondary rounded-4 bg-opacity-50 fs-5 text-light">
+                <b>Тренировка {{day+1}}</b><br>
+            {% for ex in selected_forday[day] %}
+                        {{ex.name}}
+                        {% if (ex.target not in ['Разминка','Кардио']) %}
+                            {% if ex.difficulty>=50 %}{{plan.sets_high}}{% else %}{{plan.sets_low}}{% endif %}
+                        {% endif %}
+                    <br>
+                    {% endfor %}
+                <b>Примерное время тренировки:</b> {{ times_for_train[day] }} мин.
+            </div>
+        </div>
+        {% endfor %}
+    {% endif %}
+    </div>
+</form>
+
+
+<form method="post" action="/usefilter">
+        <!-- Модальное окно подтверждения удаления -->
+        {% include 'modal_filters.html' %}
+</form>
+
+
+
+{% with messages = get_flashed_messages() %}
+        {% if messages %}
+            <ul>
+                {% for message in messages %}
+                    <li>{{ message }}</li>
+                {% endfor %}
+            </ul>
+        {% endif %}
+    {% endwith %}
+
+{% endblock %}

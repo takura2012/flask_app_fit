@@ -1,0 +1,14 @@
+body {
+    background-image: url('../imgs/background.jpg');
+    background-size: cover;
+    background-repeat: no-repeat;
+    background-attachment: fixed;
+}
+
+.bg-opacity-0 {
+    background-color: rgba(0, 0, 0, 0); /* Прозрачный цвет фона */
+}
+
+.bg-opacity-50 {
+    background-color: rgba(0, 0, 0, 0.5); /* Прозрачный цвет фона */
+}

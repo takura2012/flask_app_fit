@@ -1,0 +1,12 @@
+{% extends 'base.html' %}
+{% block title %}
+Миграции
+{% endblock %}
+
+{% block body %}
+<h4>Миграции</h4>
+    <hr>
+    <a href="/migration/save" class="btn btn-success">Сохранить в JSON</a>
+    <a href="/migration/load" class="btn btn-warning">Загрузить в новую базу</a>
+    <a href="/migration/new_base" class="btn btn-info">Создать базу</a>
+{% endblock %}

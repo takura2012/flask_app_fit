@@ -1,0 +1,40 @@
+<!doctype html>
+<html lang="ru">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport"
+          content="width=device-width, user-scalable=no, initial-scale=1.0, maximum-scale=1.0, minimum-scale=1.0">
+    <meta http-equiv="X-UA-Compatible" content="ie=edge">
+    <link rel="stylesheet" href="{{ url_for('static', filename='css/bootstrap.min.css' )}}">
+    <link rel="stylesheet" href="{{ url_for('static', filename='css/main.css' )}}">
+    <script src="{{ url_for('static', filename='js/bootstrap.bundle.min.js') }}"></script>
+    <title>{% block title %}{% endblock %}</title>
+</head>
+
+<body>
+    <div class="container">
+        <header class="d-flex flex-wrap justify-content-center py-3 mb-4 fs-5 fw-semibold" >
+            <a href="/" class="d-flex align-items-center mb-3 mb-md-0 me-md-auto link-body-emphasis text-decoration-none">
+
+                <h2><span class="badge text-bg-dark">Привет!</span></h2>
+            </a>
+
+            <ul class="nav nav-pills">
+                <li class="nav-item"><a href="/" class="nav-link">Главная</a></li>
+                <li class="nav-item"><a href="/list" class="nav-link">Упражнения и мышцы</a></li>
+                <li class="nav-item"><a href="/create_exercises" class="nav-link">Создать упражнение</a></li>
+                <li class="nav-item"><a href="/training_create" class="nav-link">Планы</a></li>
+                <li class="nav-item"><a href="/logic" class="nav-link">Логика</a></li>
+                <li class="nav-item"><a href="/train" class="nav-link">Тренировки</a></li>
+                <!-- <li class="nav-item"><a href="/relate_tables" class="nav-link">Связи</a></li>  -->
+                <li class="nav-item"><a href="/migration" class="nav-link">Миграции</a></li>
+            </ul>
+        </header>
+    </div>
+    <div class="container">
+        {% block body %}{% endblock %}
+    </div>
+
+
+</body>
+</html>

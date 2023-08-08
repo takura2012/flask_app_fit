@@ -1,0 +1,70 @@
+{% extends 'base.html' %}
+{% block title %}
+Планы
+{% endblock %}
+
+{% block body %}
+    <h1>Создание тренировочных планов</h1>
+<form method="post">
+    <div class="row mb-3 text-left">
+        <div class="col-md-6">
+
+                План для level_day: <br>
+                <input type="text" name="level_day" id="level_day" class="form-control mb-3" value="{{bmi_dict['level_day']}}" placeholder="1_1 (1уровень_1день в неделю)" required>
+                Сила: <br>
+                <input type="number" name="strength" id="strength" class="form-control mb-3" value="{{bmi_dict['strength']}}" required>
+                Повторы для основных упражнения: <br>
+                <input type="text" name="sets_high" id="sets_high" class="form-control mb-3" value="{{bmi_dict['sets_high']}}" required>
+                Повторы для дополнительных упражнения: <br>
+                <input type="text" name="sets_low" id="sets_low" class="form-control mb-3" value="{{bmi_dict['sets_low']}}" required>
+                Рекомендация: <br>
+                <textarea name="rec" id="rec" class="form-control mb-3" rows="6">{{bmi_dict['rec']}}</textarea>
+                <button type="button" class="btn btn-success" data-bs-toggle="modal" data-bs-target="#confirmAddPlan">Сохранить</button>
+
+
+        </div>
+        <div class="col-md-6">
+            <br>
+            {% for key, group in groups.items() %}
+                <div class="row mb-0">
+                    <div class="col-3">
+                        <input type="text" name="days_{{key}}" class="form-control mb-3"
+                               {% if 'groups' in bmi_dict and key in bmi_dict['groups'].keys() %}
+                                    value="{{ bmi_dict['groups'][key] }}"
+                                {% endif %}>
+                    </div>
+                    <div class="col-9">
+                        {{key}} : {{group}}
+                    </div>
+                </div>
+
+
+            {% endfor %}
+
+        </div>
+    </div>
+
+    <hr>
+    <div class="row mb-3">
+        <div class="col-3">
+            <b>Планы в базе:</b> <br>
+            {% for plan in plans %}
+                <a class="link-success link-offset-2 link-underline-opacity-25 link-underline-opacity-100-hover d-block"
+                   href="/training_load/{{plan.level_day}}">План: {{plan.level_day}} Сила: {{plan.strength}} Сеты: {{plan.sets_high}} {{plan.sets_low}}</a>
+            {% endfor %}
+    <br><br>
+        </div>
+        <div class="col-9">
+        </div>
+    </div>
+
+    {% include "modal_add_plan.html" %}
+
+</form>
+
+
+
+
+
+
+{% endblock %}

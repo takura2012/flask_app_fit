@@ -3,7 +3,7 @@ from flask_migrate import Migrate
 from flask_sqlalchemy import SQLAlchemy
 import json
 import config
-from _models import Exercise, Muscle, ExerciseMuscle, db, Training, User, Plan
+from _models import Exercise, Muscle, ExerciseMuscle, db, User, Plan
 from sqlalchemy import Column, Integer, String, ForeignKey
 from sqlalchemy.orm import relationship
 from datetime import datetime
@@ -282,24 +282,44 @@ def create_exercises():
 
 
 @app.route('/train')
-def trainings_list():
+def train():
     const_config = {}
     index_dict = session.get('index_dict', {})
+    exercises_in_train = session.get('exercises_in_train', [])
 
     if 'filter_list' not in index_dict:
         index_dict['filter_list'] = ['1','4','7','8']
 
     const_config['filter_list'] = config.FILTER_LIST
-    all_exercises = Exercise.query.all()
+    exercises = Exercise.query.all()
     # filter here
-    exercises = [ex for ex in all_exercises]
-    exercises_in_train = []
 
-    return render_template('train.html', exercises=exercises, exercises_in_train=exercises_in_train, const_config=const_config, index_dict=index_dict)
+    return render_template('train.html', exercises=exercises, exercises_in_train=exercises_in_train,
+                           const_config=const_config, index_dict=index_dict)
 
 
-@app.route('/training_create', methods=['POST', 'GET'])
-def training_create():
+@app.route('/train/add_ex/<int:ex_id>', methods=['POST', 'GET'])
+def train_add_ex(ex_id):
+
+    exercises_in_train = session.get('exercises_in_train', [])
+    new_exercise = Exercise.query.filter_by(exercise_id=ex_id).first()
+    exercises_in_train.append(new_exercise)
+    session['exercises_in_train'] = exercises_in_train
+
+
+    return redirect('/train')
+
+
+@app.route("/train_remove_ex_<int:num>", methods=['POST', 'GET'])
+def train_remove_ex(num):
+    exercises_in_train = session.get('exercises_in_train', [])
+    del exercises_in_train[num]
+    session['exercises_in_train'] = exercises_in_train
+
+    return redirect('/train')
+
+@app.route('/plan_create', methods=['POST', 'GET'])
+def plan_create():
     # берем переменные из конфига и задаем новые пустые для работы с ними
     levels = config.TRAINING_LEVELS
     groups = config.GROUPS
@@ -353,13 +373,13 @@ def training_create():
             return 'Ошибка при сохранении плана \n'
 
         session['bmi_dict'] = bmi_dict
-        return redirect(url_for('training_create'))
+        return redirect(url_for('plan_create'))
 
-    return render_template('training_create.html', levels=levels, bmi_dict=bmi_dict, groups=groups, plans=plans)
+    return render_template('plan_create.html', levels=levels, bmi_dict=bmi_dict, groups=groups, plans=plans)
 
 
-@app.route('/training_load/<string:level_day>')
-def training_load(level_day):
+@app.route('/plan_load/<string:level_day>')
+def plan_load(level_day):
     plan = Plan.query.filter_by(level_day=level_day).first()
     bmi_dict = {}
 
@@ -372,7 +392,7 @@ def training_load(level_day):
 
     session['bmi_dict'] = bmi_dict
 
-    return redirect(url_for('training_create'))
+    return redirect(url_for('plan_create'))
 
 
 @app.route('/logic', methods=['POST', 'GET'])

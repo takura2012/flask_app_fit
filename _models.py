@@ -32,6 +32,7 @@ class Exercise(db.Model):
     filters = db.Column(JSON, default=[])   # LOCATION_FILTERS.keys
 
     muscles = relationship('Muscle', secondary='exercise_muscles')
+    training_exercises = db.relationship('TrainingExercise', backref='exercise')
 
     def __repr__(self):
         return 'Exercise %r' % self.exercise_id
@@ -89,6 +90,7 @@ class Training(db.Model):
 
     exercises = db.relationship('Exercise', secondary='training_exercises')
 
+
     def __repr__(self):
         return 'Training %r' % self.training_id
 
@@ -98,9 +100,10 @@ class TrainingExercise(db.Model):
 
     training_id = db.Column(db.Integer, db.ForeignKey('trainings.training_id', ondelete='CASCADE'), primary_key=True)
     exercise_id = db.Column(db.Integer, db.ForeignKey('exercises.exercise_id', ondelete='CASCADE'), primary_key=True)
-    order = db.Column(db.Integer, nullable=False)
-    sets = db.Column(db.Integer, nullable=False)
-    repetitions = db.Column(db.Integer, nullable=False)
+
+    sets = db.Column(db.Integer)
+    repetitions = db.Column(db.Integer)
+    weight = db.Column(db.Integer)
 
 
 class Plan(db.Model):

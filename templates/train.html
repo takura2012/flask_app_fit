@@ -15,9 +15,9 @@
         <div class="col-6">
             Упражнение (выпадающий список через фильтры) <br>
 
-            <select name="select_ex" id="select_ex" class="form-select form-select-md mb-3 me-2" aria-label=".form-select-md example">>
+            <select name="select_exercise" id="select_exercise" class="form-select form-select-md mb-3 me-2" aria-label=".form-select-md example">>
                 {% for ex in exercises %}
-                    <option value="{{ex.id}}">{{ex.name}} ({{ex.target}})
+                    <option value="{{ex.exercise_id}}">{{ex.name}} ({{ex.target}})
                 {% endfor %}
             </select>
 
@@ -31,7 +31,7 @@
                 <input type="number" name="reps" id="reps" class="form-control mb-2"><br>
             </div>
             <div class="col-3">
-                <a href="/train/add_ex/1" class="btn btn-outline-success">Добавить упражнение</a>
+                <a href="/train/add_ex/{{exercises[0].exercise_id}}" id="add_link" class="btn btn-outline-success">Добавить упражнение</a>
             </div>
             </div>
 
@@ -43,6 +43,10 @@
             <input type="text" name="name" id="name" class="form-control mb-2">
             Упражнения в тренировке
             <hr>
+            {% for ex in exercises_in_train %}
+                <a href="/train_remove_ex_{{loop.index-1}}" class="link-success link-offset-2 link-underline-opacity-25 link-underline-opacity-100-hover d-block">{{ ex.name }}</a>
+            {% endfor %}
+            <br>
         <input type="submit" class="btn btn-success" value="Сохранить">
         </div>
     </div>
@@ -54,4 +58,22 @@
         {% include 'modal_filters.html' %}
 </form>
 
+
+<script>
+
+    const add_link = document.getElementById('add_link');
+    const select_exercise = document.getElementById('select_exercise');
+
+    select_exercise.addEventListener('change', function() {
+        const selectedValue = select_exercise.value;
+
+        const url = "/train/add_ex/"+selectedValue;
+
+        add_link.href = url;
+  });
+</script>
+
+
 {% endblock %}
+
+

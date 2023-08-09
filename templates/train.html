@@ -9,10 +9,12 @@
 
 <button type="button" class="btn btn-outline-info" data-bs-toggle="modal" data-bs-target="#modal_filters">Фильтры для упражнений</button>
 
-<form method="post">
+
 
     <div class="row mb-2">
+
         <div class="col-6">
+            <form action={{ url_for('train_add_ex') }} method="post">
             Упражнение (выпадающий список через фильтры) <br>
 
             <select name="select_exercise" id="select_exercise" class="form-select form-select-md mb-3 me-2" aria-label=".form-select-md example">>
@@ -24,34 +26,38 @@
             <div class="row mb-2">
             <div class="col-3">
                 Подходы <br>
-                <input type="number" name="sets" id="sets" class="form-control mb-2">
+                <input type="number" name="sets" id="sets" class="form-control mb-2" required>
             </div>
             <div class="col-3">
                 Повторения <br>
-                <input type="number" name="reps" id="reps" class="form-control mb-2"><br>
+                <input type="number" name="reps" id="reps" class="form-control mb-2" required><br>
             </div>
             <div class="col-3">
-                <a href="/train/add_ex/{{exercises[0].exercise_id}}" id="add_link" class="btn btn-outline-success">Добавить упражнение</a>
+                <input type="submit" class="btn btn-outline-success" value="Добавить упражнение">
             </div>
             </div>
-
-
-
+            </form>
         </div>
-        <div class="col-6">
-            Название тренировки(например фулбоди для новичка) <br>
-            <input type="text" name="name" id="name" class="form-control mb-2">
-            Упражнения в тренировке
-            <hr>
-            {% for ex in exercises_in_train %}
-                <a href="/train_remove_ex_{{loop.index-1}}" class="link-success link-offset-2 link-underline-opacity-25 link-underline-opacity-100-hover d-block">{{ ex.name }}</a>
-            {% endfor %}
-            <br>
-        <input type="submit" class="btn btn-success" value="Сохранить">
-        </div>
+
+
+
+            <div class="col-6">
+                <form method="post">
+                    Название тренировки(например фулбоди для новичка) <br>
+                    <input type="text" name="name" id="name" class="form-control mb-2" required value="{{train_name}}">
+                    Упражнения в тренировке
+                    <hr>
+                    {% for ex in exercises_in_train %}
+                        <a href="/train_remove_ex_{{loop.index-1}}" class="link-success link-offset-2 link-underline-opacity-25 link-underline-opacity-100-hover d-block">{{ ex[0].name }}: {{ ex[1] }}x{{ex[2]}} </a>
+                    {% endfor %}
+                    <br>
+                    <input type="submit" class="btn btn-success" value="Сохранить">
+                </form>
+            </div>
+
     </div>
 
-</form>
+
 
 <form method="post" action="/usefilter">
         <!-- Модальное окно подтверждения удаления -->
@@ -67,10 +73,12 @@
     select_exercise.addEventListener('change', function() {
         const selectedValue = select_exercise.value;
 
-        const url = "/train/add_ex/"+selectedValue;
+        const url = "/train/add_ex/"+selectedValue+"/0/0";
 
         add_link.href = url;
   });
+
+
 </script>
 
 

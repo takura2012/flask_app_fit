@@ -3,7 +3,7 @@ from flask_migrate import Migrate
 from flask_sqlalchemy import SQLAlchemy
 import json
 import config
-from _models import Exercise, Muscle, ExerciseMuscle, db, User, Plan
+from _models import Exercise, Muscle, ExerciseMuscle, db, User, Plan, TrainingExercise, Training
 from sqlalchemy import Column, Integer, String, ForeignKey
 from sqlalchemy.orm import relationship
 from datetime import datetime
@@ -281,11 +281,71 @@ def create_exercises():
         return render_template('create_exercises.html', targets=targets, config_filters=config_filters)
 
 
-@app.route('/train')
+@app.route('/train', methods=['POST','GET'])
 def train():
     const_config = {}
     index_dict = session.get('index_dict', {})
     exercises_in_train = session.get('exercises_in_train', [])
+    train_name = session.get('train_name', '')
+
+    if request.method == 'POST':    # получаем данные с формы
+
+        train_name = request.form.get('name')
+
+        training = Training.query.filter_by(name=train_name).first()    # находим тренировку по имени в базе
+        if not training:    # если не существует то создаем и добавляем в базу
+            training = Training(name=train_name)
+            db.session.add(training)
+
+            try:
+                db.session.commit()
+            except Exception as e:
+                db.session.rollback()
+                return f'Ошибка добавления в базу Training {e}'
+
+        t_e_list = []
+
+        # нахожу все объекты связей в таблице TrainingExercise по ИД тренировки
+        training_exercises = TrainingExercise.query.filter_by(training_id=training.training_id).all()
+        for te in training_exercises:   # удаляю все связи с этой тренировкой, так как будут созданы новые
+            db.session.delete(te)
+
+        if exercises_in_train:  # список упражнений в тренировке передается через сессию с соседней формы
+            for ex in exercises_in_train:   # в цикле по упражнениям создаю связь TrainingExercise + сеты и повторы
+                training_exercise = TrainingExercise(training_id = training.training_id,
+                                                     exercise_id = ex[0].exercise_id,
+                                                     sets = int(ex[1]),
+                                                     repetitions = int(ex[2]),
+                                                     weight = 0)
+
+                t_e_list.append(training_exercise)  # добавляю в список в этом цикле, чтобы сделать общий комит после цикла
+
+            try:
+                db.session.add_all(t_e_list)
+                db.session.commit()
+            except Exception as e:
+                db.session.rollback()
+                return f'Ошибка добавления в базу training_exercise {e}'
+
+
+        if training is not None:    # это просто выборка и печать текущего training и его упражнений и сетов
+            for te in training.exercises:   # для каждого упражнения te из цикла по training.exercises (класса Training)
+                training_exercise = TrainingExercise.query.filter_by(training_id=training.training_id,
+                                                                     exercise_id=te.exercise_id).first()
+                # выбираем по фильтру объекты связей TrainingExercise по training_id и exercise_id
+                if training_exercise:   # и выбираем связанные сеты повторы и веса (которые 0 по умолчанию)
+                    sets = training_exercise.sets
+                    repetitions = training_exercise.repetitions
+                    weight = training_exercise.weight
+
+                print(f'te = {te}')
+                print(f'sets = {sets}')
+                print(f'repetitions = {repetitions}')
+                print(f'weight = {weight}')
+
+
+
+        session['train_name'] = train_name
 
     if 'filter_list' not in index_dict:
         index_dict['filter_list'] = ['1','4','7','8']
@@ -294,16 +354,27 @@ def train():
     exercises = Exercise.query.all()
     # filter here
 
+
+
     return render_template('train.html', exercises=exercises, exercises_in_train=exercises_in_train,
-                           const_config=const_config, index_dict=index_dict)
+                           const_config=const_config, index_dict=index_dict, train_name=train_name)
 
 
-@app.route('/train/add_ex/<int:ex_id>', methods=['POST', 'GET'])
-def train_add_ex(ex_id):
+@app.route('/train_add_ex', methods=['POST', 'GET'])
+def train_add_ex():
 
     exercises_in_train = session.get('exercises_in_train', [])
+
+    ex_id = request.form.get('select_exercise')
+    sets = request.form.get('sets')
+    reps = request.form.get('reps')
+
     new_exercise = Exercise.query.filter_by(exercise_id=ex_id).first()
-    exercises_in_train.append(new_exercise)
+    exercises_in_train.append([new_exercise, sets, reps])
+
+    # print(f'ex: {new_exercise}\nsets:{sets}\nreps: {reps}')
+    # print(exercises_in_train)
+
     session['exercises_in_train'] = exercises_in_train
 
 

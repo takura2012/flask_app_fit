@@ -32,7 +32,7 @@ class Exercise(db.Model):
     filters = db.Column(JSON, default=[])   # LOCATION_FILTERS.keys
 
     muscles = relationship('Muscle', secondary='exercise_muscles')
-    training_exercises = db.relationship('TrainingExercise', backref='exercise')
+    training = db.relationship('Training', secondary='training_exercises', overlaps="exercises")
 
     def __repr__(self):
         return 'Exercise %r' % self.exercise_id
@@ -86,9 +86,10 @@ class Training(db.Model):
 
     training_id = db.Column(db.Integer, primary_key=True)
     name = db.Column(db.String(50), nullable=False)
+    complete = db.Column(db.Boolean, default=False)
     date = db.Column(db.DateTime, nullable=False, default=datetime.utcnow())
 
-    exercises = db.relationship('Exercise', secondary='training_exercises')
+    exercises = relationship('Exercise', secondary='training_exercises', overlaps="trainings")
 
 
     def __repr__(self):

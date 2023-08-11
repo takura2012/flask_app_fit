@@ -1,7 +1,7 @@
 # Создайте структуру данных, чтобы хранить информацию об упражнениях, мышцах и нагрузке.
 # Загрузите данные из вашей базы данных в эту структуру
 import random, config
-from _models import Exercise, Muscle, Training, ExerciseMuscle
+from _models import Exercise, Muscle, Training, ExerciseMuscle, TrainingExercise
 from typing import List
 from sqlalchemy import or_
 
@@ -99,3 +99,23 @@ def convert_dict_to_list(target_days, groups=config.GROUPS):
 def filtering(object_filters, filter_lists):
     result = all(any(filter in object_filters for filter in filter_list) for filter_list in filter_lists)
     return result
+
+
+def get_training_connections(train_name):   # te_info = [te, sets, repetitions, weight] (te- Exercise)
+
+    train = Training.query.filter_by(name=train_name).first()
+    te_info_list = []
+
+    for te in train.exercises:  # для каждого упражнения te из цикла по training.exercises (класса Training)
+        training_exercise = TrainingExercise.query.filter_by(training_id=train.training_id,
+                                                             exercise_id=te.exercise_id).first()
+        # выбираем по фильтру объекты связей TrainingExercise по training_id и exercise_id
+        if training_exercise:  # и выбираем связанные сеты повторы и веса (которые 0 по умолчанию)
+            sets = training_exercise.sets
+            repetitions = training_exercise.repetitions
+            weight = training_exercise.weight
+
+            te_info = [te, sets, repetitions, weight]
+            te_info_list.append(te_info)
+
+    return te_info_list

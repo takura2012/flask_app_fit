@@ -4,7 +4,7 @@ from flask_sqlalchemy import SQLAlchemy
 import json
 import config
 from _models import Exercise, Muscle, ExerciseMuscle, db, User, Plan, TrainingExercise, Training
-from sqlalchemy import Column, Integer, String, ForeignKey
+from sqlalchemy import Column, Integer, String, ForeignKey, and_, or_
 from sqlalchemy.orm import relationship
 from datetime import datetime
 from _logic import *
@@ -372,13 +372,9 @@ def train_add_ex():
     new_exercise = Exercise.query.filter_by(exercise_id=ex_id).first()
     exercises_in_train.append([new_exercise, sets, reps])
 
-    # print(f'ex: {new_exercise}\nsets:{sets}\nreps: {reps}')
-    # print(exercises_in_train)
-
     session['exercises_in_train'] = exercises_in_train
 
-
-    return redirect('/train')
+    return render_template('edit_train.html', train=train, te_info_list=te_info_list)
 
 
 @app.route("/train_remove_ex_<int:num>", methods=['POST', 'GET'])
@@ -388,6 +384,84 @@ def train_remove_ex(num):
     session['exercises_in_train'] = exercises_in_train
 
     return redirect('/train')
+
+
+@app.route("/new_train", methods=['POST', 'GET'])
+def new_train():
+    config_filters = config.FILTER_LIST
+    te_info_list = []
+    if request.method == 'POST':
+        train_name = request.form.get('train_name')
+
+        train = Training.query.filter_by(name=train_name).first()
+
+        if train:
+            te_info_list = get_training_connections(train_name)
+        else:
+            train = Training(
+                name=train_name
+            )
+
+            db.session.add(train)
+            try:
+                db.session.commit()
+            except Exception as e:
+                return(f'Не удалось сохранить тренировку {train_name} в базу: {e}')
+
+        return render_template('edit_train.html', train=train, te_info_list=te_info_list, config_filters=config_filters)
+    else:
+        train_name = session.get('train_name','')
+
+    trains_list = Training.query.all()
+
+    return render_template('new_train.html', trains_list=trains_list)
+
+@app.route('/edit_train/<int:train_id>', methods=['POST', 'GET'])
+def edit_train(train_id):
+    config_filters = config.FILTER_LIST
+    train = Training.query.filter_by(training_id=train_id).first()
+    exercise_filter_list = session.get('exercise_filter_list', [])
+    print(session)
+    # Создаем список условий для каждой группы фильтров
+    group_conditions = []
+    for group in exercise_filter_list:
+        group_condition = or_(*[Exercise.filters.contains(filter) for filter in group])
+        group_conditions.append(group_condition)
+
+    # Объединяем все групповые условия оператором and_
+    combined_condition = and_(*group_conditions)
+
+    # Применяем фильтр к запросу
+    exercises = Exercise.query.filter(combined_condition).all()
+
+
+
+    if train:
+        train_name = train.name
+        session['train'] = train
+        session['train_name'] = train_name
+        te_info_list = get_training_connections(train_name)
+        session['te_info_list'] = te_info_list
+    return render_template('edit_train.html', train=train, te_info_list=te_info_list,
+                           exercises=exercises, config_filters=config_filters, exercise_filter_list=exercise_filter_list)
+
+
+@app.route('/get_exercise_filter_list', methods=['POST', 'GET'])
+def exercise_filter_list():
+    config_filters = config.FILTER_LIST
+    train = session['train']
+    train_id = train.training_id
+    exercise_filter_list = []
+
+    if request.method == 'POST':    # если принимаются данные с формы
+        for i in range(len(config_filters)):
+            exercise_filter_list.append(request.form.getlist('filters' + str(i + 1)))  # снимаю фильтрі в списки
+
+        session['exercise_filter_list'] = exercise_filter_list
+
+
+    return redirect(url_for('edit_train', train_id=train_id))
+
 
 @app.route('/plan_create', methods=['POST', 'GET'])
 def plan_create():

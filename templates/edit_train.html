@@ -1,0 +1,108 @@
+{% extends 'base.html' %}
+{% block title %}
+Новая тренировка
+{% endblock %}
+
+{% block body %}
+
+
+
+
+<div class="row mb-1">
+            <div class="col-6">
+                <h3>Редактирование: {{train.name}}</h3>
+            </div>
+            <div class="col-3">
+                <a href="#" class="btn btn-success">Сохранить</a>
+                <a href="#" class="btn btn-outline-success">Переименовать</a>
+            </div>
+            <div class="col-3">
+                <a href="#" class="btn btn-outline-danger">Удалить всю тренировку</a>
+            </div>
+        </div>
+
+<hr>
+
+{% if te_info_list %}
+
+
+    {% for te_info in te_info_list %}
+
+        <div class="row mb-1">
+            <div class="col-9">
+                {{te_info[0].name}}  {{te_info[1]}}x{{te_info[2]}}, Рабочий вес: {{te_info[3]}}
+            </div>
+            <div class="col-3">
+                <a href="#" class="btn btn-outline-primary btn-sm">Редактировать</a>
+                <a href="#" class="btn btn-outline-danger btn-sm">Удалить</a>
+            </div>
+        </div>
+
+    {% endfor %}
+
+
+{% else %} <h4>Не найдено упражнений в этой тренировке </h4> {% endif %}
+<hr>
+
+
+<form action="/get_exercise_filter_list" method="post">
+    <b>Фильтры упражнений:</b>
+    <hr>
+    <div class="row mb-2">
+                {% for i in range(config_filters|length) %}
+        <div class="col-2">
+                    {% for key, filter in config_filters[i].items() %}
+
+                        <div class="form-check">
+                            <input class="form-check-input" type="checkbox" name="filters{{i+1}}" value="{{key}}" id="chk_{{key}}" {% if key in exercise_filter_list[i]  %} checked {% endif %}>
+                            <label class="form-check-label" for="chk_{{key}}">
+                               {{filter}}
+                            </label>
+                        </div>
+
+
+                    {% endfor %}
+        </div>
+                {% endfor %}
+        <div class="col-2">
+            <input type="submit" class="btn btn-outline-primary" value="Применить фильтры">
+        </div>
+    </div>
+</form>
+
+
+<form action="/train_add_ex" method="post">
+        <select name="select_exercise" id="select_exercise" class="form-select form-select-md mb-3 me-2" aria-label=".form-select-md example">>
+                {% for ex in exercises %}
+                    <option value="{{ex.exercise_id}}">{{ex.name}} ({{ex.target}})
+                {% endfor %}
+        </select>
+
+            <div class="row mb-2">
+            <div class="col-3">
+                Подходы <br>
+                <input type="number" name="sets" id="sets" class="form-control mb-2" required>
+            </div>
+            <div class="col-3">
+                Повторения <br>
+                <input type="number" name="reps" id="reps" class="form-control mb-2" required><br>
+            </div>
+            <div class="col-3">
+                <br>
+                <input type="submit" class="btn btn-success" value="Добавить упражнение">
+            </div>
+            </div>
+</form>
+
+
+
+
+
+
+
+
+
+
+{% endblock %}
+
+

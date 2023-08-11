@@ -43,7 +43,11 @@ FILTERS_TYPE = {
     '10': 'Кардио'
 }
 
-FILTER_LIST = [FILTERS_LOCATION, FILTERS_SEX, FILTERS_INVENTORY, FILTERS_TYPE]
+FILTERS_LEVEL = {
+    '11': 'Для начинающих'
+}
+
+FILTER_LIST = [FILTERS_LOCATION, FILTERS_SEX, FILTERS_INVENTORY, FILTERS_TYPE, FILTERS_LEVEL]
 
 GROUPS = {
         'fullbody': ['Разминка', 'Ноги', 'Спина', 'Грудь'],

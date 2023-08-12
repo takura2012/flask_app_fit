@@ -12,12 +12,12 @@
             <div class="col-6">
                 <h3>Редактирование: {{train.name}}</h3>
             </div>
-            <div class="col-3">
-                <a href="#" class="btn btn-success">Сохранить</a>
+            <div class="col-4">
                 <a href="#" class="btn btn-outline-success">Переименовать</a>
+                <a href="#" class="btn btn-outline-primary">Клонировать</a>
             </div>
-            <div class="col-3">
-                <a href="#" class="btn btn-outline-danger">Удалить всю тренировку</a>
+            <div class="col-2">
+                <a href="#" class="btn btn-outline-danger">Удалить тренировку</a>
             </div>
         </div>
 
@@ -46,7 +46,22 @@
 
 
 <form action="/get_exercise_filter_list" method="post">
-    <b>Фильтры упражнений:</b>
+
+    <div class="row mb-0">
+        <div class="col-2">
+            <b>Фильтры упражнений:</b>
+        </div>
+        <div class="col-2">
+            <select name="select_target" id="select_target" class="form-select form-select-md mb-3 me-2" aria-label=".form-select-md example">>
+                {% for num in range(config_filter_targets|length) %}
+                    <option value="{{num-1}}" {% if target_filter|int+1 == num %} selected {% endif %}>{{config_filter_targets[num]}}
+                {% endfor %}
+        </select>
+        </div>
+        <div class="col-9">
+
+        </div>
+    </div>
     <hr>
     <div class="row mb-2">
                 {% for i in range(config_filters|length) %}

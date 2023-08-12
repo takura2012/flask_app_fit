@@ -113,17 +113,6 @@ def usefilter():
     return redirect('index')
 
 
-@app.route('/relate_tables', methods=['POST', 'GET'])
-def relate_tables():
-    exercises = Exercise.query.all()
-    muscles = Muscle.query.all()
-    ex_mus = ExerciseMuscle.query.all()
-    if request.method == 'POST':
-        return 'PASS'
-    else:
-        return render_template('relate_tables.html', ex_mus=ex_mus)
-
-
 @app.route('/list/<string:counters>/del', methods=['POST','GET'])
 def list_del(counters):
     tb = counters[:2]
@@ -281,136 +270,56 @@ def create_exercises():
         return render_template('create_exercises.html', targets=targets, config_filters=config_filters)
 
 
-@app.route('/train', methods=['POST','GET'])
-def train():
-    const_config = {}
-    index_dict = session.get('index_dict', {})
-    exercises_in_train = session.get('exercises_in_train', [])
-    train_name = session.get('train_name', '')
+@app.route('/train_add_ex', methods=['POST', 'GET'])
+def train_add_ex():
 
-    if request.method == 'POST':    # получаем данные с формы
+    if request.method == 'POST':    # при получении данных с формы
 
-        train_name = request.form.get('name')
+        try:
+            train = session['train']
+        except:
+            return '<h1>Ошибка: Тренировка не найдена</h1>'
+        train_id = train.training_id
 
-        training = Training.query.filter_by(name=train_name).first()    # находим тренировку по имени в базе
-        if not training:    # если не существует то создаем и добавляем в базу
-            training = Training(name=train_name)
-            db.session.add(training)
+        ex_id = request.form.get('select_exercise')
+        sets = request.form.get('sets')
+        reps = request.form.get('reps')
 
-            try:
-                db.session.commit()
-            except Exception as e:
-                db.session.rollback()
-                return f'Ошибка добавления в базу Training {e}'
-
-        t_e_list = []
-
-        # нахожу все объекты связей в таблице TrainingExercise по ИД тренировки
-        training_exercises = TrainingExercise.query.filter_by(training_id=training.training_id).all()
-        for te in training_exercises:   # удаляю все связи с этой тренировкой, так как будут созданы новые
-            db.session.delete(te)
-
-        if exercises_in_train:  # список упражнений в тренировке передается через сессию с соседней формы
-            for ex in exercises_in_train:   # в цикле по упражнениям создаю связь TrainingExercise + сеты и повторы
-                training_exercise = TrainingExercise(training_id = training.training_id,
-                                                     exercise_id = ex[0].exercise_id,
-                                                     sets = int(ex[1]),
-                                                     repetitions = int(ex[2]),
-                                                     weight = 0)
-
-                t_e_list.append(training_exercise)  # добавляю в список в этом цикле, чтобы сделать общий комит после цикла
+        # ищу в таблице связей training_exercise по тренировке и упражнениям
+        training_exercise = TrainingExercise.query.filter_by(training_id = train_id, exercise_id = int(ex_id)).first()
+        if not training_exercise:   # добавлю в базу только если не существует такого
+            training_exercise = TrainingExercise(training_id = train_id,
+                                                 exercise_id = int(ex_id),
+                                                 sets = int(sets),
+                                                 repetitions = int(reps))
 
             try:
-                db.session.add_all(t_e_list)
+                db.session.add(training_exercise)
                 db.session.commit()
             except Exception as e:
                 db.session.rollback()
                 return f'Ошибка добавления в базу training_exercise {e}'
 
-
-        if training is not None:    # это просто выборка и печать текущего training и его упражнений и сетов
-            for te in training.exercises:   # для каждого упражнения te из цикла по training.exercises (класса Training)
-                training_exercise = TrainingExercise.query.filter_by(training_id=training.training_id,
-                                                                     exercise_id=te.exercise_id).first()
-                # выбираем по фильтру объекты связей TrainingExercise по training_id и exercise_id
-                if training_exercise:   # и выбираем связанные сеты повторы и веса (которые 0 по умолчанию)
-                    sets = training_exercise.sets
-                    repetitions = training_exercise.repetitions
-                    weight = training_exercise.weight
-
-                print(f'te = {te}')
-                print(f'sets = {sets}')
-                print(f'repetitions = {repetitions}')
-                print(f'weight = {weight}')
-
-
-
-        session['train_name'] = train_name
-
-    if 'filter_list' not in index_dict:
-        index_dict['filter_list'] = ['1','4','7','8']
-
-    const_config['filter_list'] = config.FILTER_LIST
-    exercises = Exercise.query.all()
-    # filter here
-
-
-
-    return render_template('train.html', exercises=exercises, exercises_in_train=exercises_in_train,
-                           const_config=const_config, index_dict=index_dict, train_name=train_name)
-
-
-@app.route('/train_add_ex', methods=['POST', 'GET'])
-def train_add_ex():
-
-    exercises_in_train = session.get('exercises_in_train', [])
-
-    ex_id = request.form.get('select_exercise')
-    sets = request.form.get('sets')
-    reps = request.form.get('reps')
-
-    new_exercise = Exercise.query.filter_by(exercise_id=ex_id).first()
-    exercises_in_train.append([new_exercise, sets, reps])
-
-    session['exercises_in_train'] = exercises_in_train
-
-    return render_template('edit_train.html', train=train, te_info_list=te_info_list)
-
-
-@app.route("/train_remove_ex_<int:num>", methods=['POST', 'GET'])
-def train_remove_ex(num):
-    exercises_in_train = session.get('exercises_in_train', [])
-    del exercises_in_train[num]
-    session['exercises_in_train'] = exercises_in_train
-
-    return redirect('/train')
+    return redirect(url_for('edit_train', train_id=train_id))
 
 
 @app.route("/new_train", methods=['POST', 'GET'])
 def new_train():
-    config_filters = config.FILTER_LIST
-    te_info_list = []
+
     if request.method == 'POST':
         train_name = request.form.get('train_name')
 
         train = Training.query.filter_by(name=train_name).first()
 
-        if train:
-            te_info_list = get_training_connections(train_name)
-        else:
-            train = Training(
-                name=train_name
-            )
-
+        if not train:   # если тренировки не существует то создаю и добавляю в базу
+            train = Training(name=train_name)
             db.session.add(train)
             try:
                 db.session.commit()
             except Exception as e:
                 return(f'Не удалось сохранить тренировку {train_name} в базу: {e}')
 
-        return render_template('edit_train.html', train=train, te_info_list=te_info_list, config_filters=config_filters)
-    else:
-        train_name = session.get('train_name','')
+        return redirect(url_for('edit_train', train_id=train.training_id))
 
     trains_list = Training.query.all()
 
@@ -418,11 +327,13 @@ def new_train():
 
 @app.route('/edit_train/<int:train_id>', methods=['POST', 'GET'])
 def edit_train(train_id):
-    config_filters = config.FILTER_LIST
-    train = Training.query.filter_by(training_id=train_id).first()
-    exercise_filter_list = session.get('exercise_filter_list', [])
-    print(session)
-    # Создаем список условий для каждой группы фильтров
+    config_filters = config.FILTER_LIST # основные фильтры из конфига (список списков)
+    config_filter_targets = config.FILTER_TARGETS   # список фильтров таргета - групп мышц
+    train = Training.query.filter_by(training_id=train_id).first()  # нахожу тренировку по ID которое передано в роуте
+    exercise_filter_list = session.get('exercise_filter_list', [])  # загрузка списка фильтров из сессии, или пустой
+    target_filter = session.get('target_filter','-1')   # загрузка фильтра таргета из сессии, по умолч -1 (все)
+
+    # Создаем список условий для каждой группы фильтров - хз как оно работате делал чатГПТ. главное работает
     group_conditions = []
     for group in exercise_filter_list:
         group_condition = or_(*[Exercise.filters.contains(filter) for filter in group])
@@ -432,7 +343,14 @@ def edit_train(train_id):
     combined_condition = and_(*group_conditions)
 
     # Применяем фильтр к запросу
-    exercises = Exercise.query.filter(combined_condition).all()
+    filtered_exercises = Exercise.query.filter(combined_condition).all()
+
+    # применяем фильтр по группе мышц
+    if int(target_filter) >= 0:
+        target_filter_name = config_filter_targets[int(target_filter)+1]
+        exercises = [ex for ex in filtered_exercises if ex.target == target_filter_name]    # отбираю по полю таргет
+    else:
+        exercises = filtered_exercises  # если фильтр -1 (все) то не фильтрую
 
 
 
@@ -440,25 +358,32 @@ def edit_train(train_id):
         train_name = train.name
         session['train'] = train
         session['train_name'] = train_name
-        te_info_list = get_training_connections(train_name)
+        te_info_list = get_training_connections(train_name) # функция для получения связанных с тренировкой полей
+        # te_info_list = [[Exercise, sets, repetitions, weight], [...], ...]    -
         session['te_info_list'] = te_info_list
+
     return render_template('edit_train.html', train=train, te_info_list=te_info_list,
-                           exercises=exercises, config_filters=config_filters, exercise_filter_list=exercise_filter_list)
+                           exercises=exercises, config_filters=config_filters, exercise_filter_list=exercise_filter_list,
+                           config_filter_targets=config_filter_targets, target_filter=target_filter)
 
 
 @app.route('/get_exercise_filter_list', methods=['POST', 'GET'])
 def exercise_filter_list():
     config_filters = config.FILTER_LIST
-    train = session['train']
+    try:
+        train = session['train']
+    except:
+        return '<h1>Ошибка: Тренировка не найдена</h1>'
     train_id = train.training_id
     exercise_filter_list = []
 
-    if request.method == 'POST':    # если принимаются данные с формы
+    if request.method == 'POST':    # если принимаются данные с формы беру фильтры и сохраняю в сессии
         for i in range(len(config_filters)):
             exercise_filter_list.append(request.form.getlist('filters' + str(i + 1)))  # снимаю фильтрі в списки
 
         session['exercise_filter_list'] = exercise_filter_list
-
+        target_filter = request.form.get('select_target')
+        session['target_filter'] = target_filter
 
     return redirect(url_for('edit_train', train_id=train_id))
 

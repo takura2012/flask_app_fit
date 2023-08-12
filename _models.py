@@ -86,8 +86,10 @@ class Training(db.Model):
 
     training_id = db.Column(db.Integer, primary_key=True)
     name = db.Column(db.String(50), nullable=False)
-    complete = db.Column(db.Boolean, default=False)
-    date = db.Column(db.DateTime, nullable=False, default=datetime.utcnow())
+    assigned = db.Column(db.Boolean, default=False)
+    completed = db.Column(db.Boolean, default=False)
+    date_created = db.Column(db.DateTime, nullable=False, default=datetime.utcnow())
+    date_complited = db.Column(db.DateTime)
 
     exercises = relationship('Exercise', secondary='training_exercises', overlaps="trainings")
 
@@ -99,12 +101,13 @@ class Training(db.Model):
 class TrainingExercise(db.Model):
     __tablename__ = 'training_exercises'
 
-    training_id = db.Column(db.Integer, db.ForeignKey('trainings.training_id', ondelete='CASCADE'), primary_key=True)
-    exercise_id = db.Column(db.Integer, db.ForeignKey('exercises.exercise_id', ondelete='CASCADE'), primary_key=True)
-
+    id = db.Column(db.Integer, primary_key=True)
+    training_id = db.Column(db.Integer, db.ForeignKey('trainings.training_id', ondelete='CASCADE'))
+    exercise_id = db.Column(db.Integer, db.ForeignKey('exercises.exercise_id', ondelete='CASCADE'))
     sets = db.Column(db.Integer)
     repetitions = db.Column(db.Integer)
-    weight = db.Column(db.Integer)
+    weight = db.Column(db.Integer, default=0)
+
 
 
 class Plan(db.Model):

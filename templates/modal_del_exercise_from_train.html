@@ -1,0 +1,17 @@
+<div class="modal fade" id="confirmDelete{{ te_info[0].exercise_id }}" tabindex="-1" aria-labelledby="confirmDeleteLabel" aria-hidden="true">
+    <div class="modal-dialog modal-dialog-centered">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h3 class="modal-title" id="confirmDeleteLabel">Подтвердите удаление</h3>
+                <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+            </div>
+            <div class="modal-body alert alert-secondary">
+                <p> Удалить упражнение: <b>{{te_info[0].name}}</b>?</p>
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Отмена</button>
+                <a href="/train_del_exercise/{{te_info[0].exercise_id}}" class="btn btn-danger">Удалить</a>
+            </div>
+        </div>
+    </div>
+</div>

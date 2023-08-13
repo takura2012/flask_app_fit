@@ -303,6 +303,33 @@ def train_add_ex():
     return redirect(url_for('edit_train', train_id=train_id))
 
 
+@app.route('/train_del_exercise/<int:ex_id>')
+def train_del_exercise(ex_id):
+    # для удаления нужно training_id, exercise_id получить с формы
+
+    try:
+        train = session['train']
+    except:
+        return 'Ошибка: тренировка для переименования не найдена'
+
+    # training_exercise = TrainingExercise(training_id=train.training_id, exercise_id=ex_id)
+    training_exercise = TrainingExercise.query.filter_by(training_id=train.training_id, exercise_id=ex_id).first()
+
+    if training_exercise:
+        db.session.delete(training_exercise)
+
+        try:
+            db.session.commit()
+        except Exception as e:
+            db.session.rollback()
+            return f'Ошибка: Не удалось удалить из базы -- {e}'
+    else:
+        return 'TrainingExercise не определено'
+
+
+    return redirect(url_for('edit_train', train_id=train.training_id))
+
+
 @app.route("/new_train", methods=['POST', 'GET'])
 def new_train():
 
@@ -324,6 +351,7 @@ def new_train():
     trains_list = Training.query.all()
 
     return render_template('new_train.html', trains_list=trains_list)
+
 
 @app.route('/edit_train/<int:train_id>', methods=['POST', 'GET'])
 def edit_train(train_id):
@@ -365,6 +393,33 @@ def edit_train(train_id):
     return render_template('edit_train.html', train=train, te_info_list=te_info_list,
                            exercises=exercises, config_filters=config_filters, exercise_filter_list=exercise_filter_list,
                            config_filter_targets=config_filter_targets, target_filter=target_filter)
+
+
+@app.route('/train_rename', methods=['POST', 'GET'])
+def train_rename():
+
+    try:
+        train = session['train']
+    except:
+        return 'Ошибка: тренировка для переименования не найдена'
+
+    train = Training.query.get(train.training_id)
+
+    if train is None:
+        return 'Ошибка: тренировка для переименования не найдена'
+
+    if request.method == 'POST':
+        train_new_name = request.form.get('train_new_name')
+
+        train.name = train_new_name
+        try:
+            db.session.commit()
+        except:
+            db.session.rollback()
+            return 'Не удалось сохранить в базу тренировку с новым именем'
+
+
+    return redirect(url_for('edit_train', train_id=train.training_id))
 
 
 @app.route('/get_exercise_filter_list', methods=['POST', 'GET'])

@@ -103,7 +103,7 @@ def get_training_connections(train_name):   # te_info = [te, sets, repetitions, 
 
     exercise_list = train.exercises  # Упражнения будут в порядке, в котором они находятся в базе
 
-    print(f'_logic: train.exercises= {exercise_list}')
+    # print(f'_logic: train.exercises= {exercise_list}')
 
     for te in train.exercises:  # для каждого упражнения te из цикла по training.exercises (класса Training)
         training_exercise = TrainingExercise.query.filter_by(training_id=train.training_id,

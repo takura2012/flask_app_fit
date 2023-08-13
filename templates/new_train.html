@@ -8,15 +8,15 @@
 <h3>Создание новой тренировки</h3>
 
                 <form method="post">
-                    Название тренировки(например фулбоди для новичка) <br>
-                    <input type="text" name="train_name" id="train_name" class="form-control mb-2" required value="{{train_name}}">
+
+                    <input type="text" name="train_name" id="train_name" class="form-control mb-2" required value="{{train_name}}" placeholder="Название тренировки(например фулбоди для новичка)">
                     <hr>
                     <input type="submit" class="btn btn-success" value="Создать">
                 </form>
 
 <div class="row mb-3 mt-3">
 
-    <h3>Созданные тренировки</h3>
+    <h3>Тренировки в базе</h3>
     {% for train in trains_list %}
     <div class="col-6">
 

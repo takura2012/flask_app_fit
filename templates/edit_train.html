@@ -9,11 +9,11 @@
 
 
 <div class="row mb-1">
-            <div class="col-6">
-                <h3>Редактирование: {{train.name}}</h3>
+            <div class="col-7">
+                <h3>{{train.name}}</h3>
             </div>
-            <div class="col-4">
-                <a href="#" class="btn btn-outline-success">Переименовать</a>
+            <div class="col-3">
+                <button type="button" class="btn btn-outline-success" data-bs-toggle="modal" data-bs-target="#rename_train">Переименовать</button>
                 <a href="#" class="btn btn-outline-primary">Клонировать</a>
             </div>
             <div class="col-2">
@@ -25,23 +25,34 @@
 
 {% if te_info_list %}
 
-
-    {% for te_info in te_info_list %}
-
-        <div class="row mb-1">
-            <div class="col-9">
-                {{te_info[0].name}}  {{te_info[1]}}x{{te_info[2]}}, Рабочий вес: {{te_info[3]}}
+<div class="row mb-1 ">
+            <div class="col-6 fs-4">
+                <b>Упражнение</b>
+            </div>
+            <div class="col-3 fs-4">
+                <b>Подходы</b>
             </div>
             <div class="col-3">
-                <a href="#" class="btn btn-outline-primary btn-sm">Редактировать</a>
-                <a href="#" class="btn btn-outline-danger btn-sm">Удалить</a>
             </div>
-        </div>
+</div>
 
+<div class="row mb-1">
+    {% for te_info in te_info_list %}
+            <div class="col-6 fs-4">
+                {{te_info[0].name}}
+            </div>
+            <div class="col-4 fs-4">
+                {{te_info[1]}}x{{te_info[2]}}
+            </div>
+            <div class="col-2">
+                <a href="#" class="btn btn-outline-primary btn-sm">Редактировать</a>
+                <button type="button" class="btn btn-outline-danger btn-sm" data-bs-toggle="modal" data-bs-target="#confirmDelete{{ te_info[0].exercise_id }}">Удалить</button>
+                {% include "modal_del_exercise_from_train.html" %}
+            </div>
     {% endfor %}
+</div>
 
-
-{% else %} <h4>Не найдено упражнений в этой тренировке </h4> {% endif %}
+{% else %} <h4>В этой тренировке пока нет упражнений</h4> {% endif %}
 <hr>
 
 
@@ -89,7 +100,7 @@
 <form action="/train_add_ex" method="post">
         <select name="select_exercise" id="select_exercise" class="form-select form-select-md mb-3 me-2" aria-label=".form-select-md example">>
                 {% for ex in exercises %}
-                    <option value="{{ex.exercise_id}}">{{ex.name}} ({{ex.target}})
+                    <option value="{{ex.exercise_id}}">{{ex.name}}
                 {% endfor %}
         </select>
 
@@ -110,11 +121,9 @@
 </form>
 
 
-
-
-
-
-
+<form action="/train_rename" method="post">
+    {% include "modal_rename_train.html" %}
+</form>
 
 
 

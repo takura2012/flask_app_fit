@@ -1,12 +1,24 @@
 {% extends 'base.html' %}
 {% block title %}
-Миграции
+Наполнение базы
 {% endblock %}
 
 {% block body %}
-<h4>Миграции</h4>
+<h4>Наполнение базы данных</h4>
     <hr>
-    <a href="/migration/save" class="btn btn-success">Сохранить в JSON</a>
-    <a href="/migration/load" class="btn btn-warning">Загрузить в новую базу</a>
-    <a href="/migration/new_base" class="btn btn-info">Создать базу</a>
+
+<div class="row">
+    <div class="col-10">
+<a href="/list" class="fs-5 fw-semibold btn text-primary">Упражнения и мышцы</a>
+<a href="/create_exercises" class="fs-5 fw-semibold text-primary btn">Создать упражнение</a>
+<a href="/plan_create" class="fs-5 fw-semibold btn text-primary">Планы</a>
+<a href="/logic" class="fs-5 fw-semibold btn text-primary">Логика</a>
+
+    </div>
+    <div class="col-2">
+        <a href="/migration/new_base" class="btn fs-5 fw-semibold btn-warning">+Таблицы</a>
+    </div>
+</div>
+
+
 {% endblock %}

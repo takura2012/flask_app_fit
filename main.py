@@ -389,10 +389,14 @@ def edit_train(train_id):
         te_info_list = get_training_connections(train_name) # функция для получения связанных с тренировкой полей
         # te_info_list = [[Exercise, sets, repetitions, weight], [...], ...]    -
         session['te_info_list'] = te_info_list
+    total_time = 0
+    for te_info in te_info_list:
+        total_time += te_info[0].time_per_set * te_info[1]
+
 
     return render_template('edit_train.html', train=train, te_info_list=te_info_list,
                            exercises=exercises, config_filters=config_filters, exercise_filter_list=exercise_filter_list,
-                           config_filter_targets=config_filter_targets, target_filter=target_filter)
+                           config_filter_targets=config_filter_targets, target_filter=target_filter, total_time=total_time)
 
 
 @app.route('/train_rename', methods=['POST', 'GET'])
@@ -421,6 +425,23 @@ def train_rename():
 
     return redirect(url_for('edit_train', train_id=train.training_id))
 
+
+@app.route("/train_delete", methods=['POST', 'GET'])
+def train_delete():
+    try:
+        train = session['train']
+    except:
+        return 'Что то пошло не так: тренировка не найдена'
+
+    train = Training.query.get(train.training_id)
+    db.session.delete(train)
+    try:
+        db.session.commit()
+    except:
+        db.session.rollback()
+        return f'Ошибка базы данных: Не удалось удалить тренировку {train.name}'
+
+    return redirect('new_train')
 
 @app.route('/get_exercise_filter_list', methods=['POST', 'GET'])
 def exercise_filter_list():
@@ -588,16 +609,6 @@ def logic_retrieve(ex_id):
 def migration():
     session.clear()
     return render_template('migration.html')
-
-
-@app.route('/migration/save')
-def migration_save():
-    return redirect('/migration')
-
-
-@app.route('/migration/load')
-def migration_load():
-    return redirect('/migration')
 
 
 @app.route('/migration/new_base')

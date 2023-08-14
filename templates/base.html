@@ -12,27 +12,19 @@
 </head>
 
 <body>
-    <div class="container">
-        <header class="d-flex flex-wrap justify-content-center py-3 mb-4 fs-5 fw-semibold" >
-            <a href="/" class="d-flex align-items-center mb-3 mb-md-0 me-md-auto link-body-emphasis text-decoration-none">
-
-                <h2><span class="badge text-bg-dark">Привет!</span></h2>
-            </a>
-
-            <ul class="nav nav-pills">
-                <li class="nav-item"><a href="/" class="nav-link">Главная</a></li>
-                <li class="nav-item"><a href="/list" class="nav-link">Упражнения и мышцы</a></li>
-                <li class="nav-item"><a href="/create_exercises" class="nav-link">Создать упражнение</a></li>
-                <li class="nav-item"><a href="/plan_create" class="nav-link">Планы</a></li>
-                <li class="nav-item"><a href="/logic" class="nav-link">Логика</a></li>
-                <li class="nav-item"><a href="/new_train" class="nav-link">Тренировки</a></li>
-                <li class="nav-item"><a href="/migration" class="nav-link">База</a></li>
+    <div class="container text-primary bg-opacity-20 rounded-2">
+        <header class="d-flex flex-wrap justify-content-center py-3 mb-2 fs-5 fw-semibold" >
+            <ul class="nav nav-pills ">
+                <li class="nav-item"><a href="/" class="fs-5 fw-semibold btn btn">Главная</a></li>
+                <li class="nav-item"><a href="/new_train" class="fs-5 fw-semibold btn">Тренировки</a></li>
+                <li class="nav-item"><a href="/migration" class="fs-5 fw-semibold btn">База</a></li>
             </ul>
         </header>
     </div>
     <div class="container">
         {% block body %}{% endblock %}
     </div>
+
 
 
 </body>

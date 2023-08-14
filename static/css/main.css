@@ -12,3 +12,7 @@ body {
 .bg-opacity-50 {
     background-color: rgba(0, 0, 0, 0.5); /* Прозрачный цвет фона */
 }
+
+.bg-opacity-20 {
+    background-color: rgba(0, 0, 0, 0.2); /* Прозрачный цвет фона */
+}

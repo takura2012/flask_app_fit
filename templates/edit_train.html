@@ -7,55 +7,66 @@
 
 
 
-
-<div class="row mb-1">
+<!-- Раздел Имя тренировки -->
+<div class="row mb-1 p-3 bg-opacity-20 rounded-2">
             <div class="col-7">
                 <h3>{{train.name}}</h3>
             </div>
             <div class="col-3">
-                <button type="button" class="btn btn-outline-success" data-bs-toggle="modal" data-bs-target="#rename_train">Переименовать</button>
-                <a href="#" class="btn btn-outline-primary">Клонировать</a>
+                <button type="button" class="btn btn-success" data-bs-toggle="modal" data-bs-target="#rename_train">Переименовать</button>
             </div>
             <div class="col-2">
-                <a href="#" class="btn btn-outline-danger">Удалить тренировку</a>
+                <button type="button" class="btn btn-danger" data-bs-toggle="modal" data-bs-target="#delete_train">Удалить тренировку</button>
             </div>
         </div>
 
 <hr>
 
+<!-- Раздел Упражнения -->
+<section >
 {% if te_info_list %}
 
-<div class="row mb-1 ">
-            <div class="col-6 fs-4">
-                <b>Упражнение</b>
-            </div>
-            <div class="col-3 fs-4">
-                <b>Подходы</b>
-            </div>
-            <div class="col-3">
-            </div>
-</div>
+    <div class="row mb-1 ">
+                <div class="col-6 fs-4">
+                    <b>Упражнение</b>
+                </div>
+                <div class="col-3 fs-4">
+                    <b>Подходы</b>
+                </div>
+                <div class="col-3">
+                </div>
+    </div>
 
-<div class="row mb-1">
-    {% for te_info in te_info_list %}
-            <div class="col-6 fs-4">
-                {{te_info[0].name}}
-            </div>
-            <div class="col-4 fs-4">
-                {{te_info[1]}}x{{te_info[2]}}
-            </div>
-            <div class="col-2">
-                <a href="#" class="btn btn-outline-primary btn-sm">Редактировать</a>
-                <button type="button" class="btn btn-outline-danger btn-sm" data-bs-toggle="modal" data-bs-target="#confirmDelete{{ te_info[0].exercise_id }}">Удалить</button>
-                {% include "modal_del_exercise_from_train.html" %}
-            </div>
-    {% endfor %}
-</div>
+    <div class="row mb-1">
+        {% for te_info in te_info_list %}
+                <div class="col-6 fs-4">
+                    {{te_info[0].name}}
+                </div>
+                <div class="col-4 fs-4">
+                    {{te_info[1]}}x{{te_info[2]}} ({{te_info[0].time_per_set*te_info[1]}} мин.)
+                </div>
+                <div class="col-2">
+                    <a href="#" class="btn btn-outline-primary btn-sm">Редактировать</a>
+                    <button type="button" class="btn btn-outline-danger btn-sm" data-bs-toggle="modal" data-bs-target="#confirmDelete{{ te_info[0].exercise_id }}">Удалить</button>
+                    {% include "modal_del_exercise_from_train.html" %}
+                </div>
+        {% endfor %}
+                <div class="col-6 fs-4">
+                </div>
+                <div class="col-4 fs-4">
+                   Всего времени:  {{total_time}} мин.
+                </div>
+                <div class="col-2">
+                </div>
 
-{% else %} <h4>В этой тренировке пока нет упражнений</h4> {% endif %}
+    </div>
+
+{% else %} <h4>В этой тренировке пока нет упражнений</h4>
+{% endif %}
+</section>
 <hr>
 
-
+<!-- Раздел Фильтры -->
 <form action="/get_exercise_filter_list" method="post">
 
     <div class="row mb-0">
@@ -63,13 +74,20 @@
             <b>Фильтры упражнений:</b>
         </div>
         <div class="col-2">
+
+            <div class="container-fluid">
             <select name="select_target" id="select_target" class="form-select form-select-md mb-3 me-2" aria-label=".form-select-md example">>
                 {% for num in range(config_filter_targets|length) %}
                     <option value="{{num-1}}" {% if target_filter|int+1 == num %} selected {% endif %}>{{config_filter_targets[num]}}
                 {% endfor %}
-        </select>
+            </select>
+            </div>
         </div>
-        <div class="col-9">
+        <div class="col-2">
+            <input type="submit" class="btn btn-primary" value="Применить фильтры">
+
+        </div>
+        <div class="col-7">
 
         </div>
     </div>
@@ -90,13 +108,11 @@
                     {% endfor %}
         </div>
                 {% endfor %}
-        <div class="col-2">
-            <input type="submit" class="btn btn-outline-primary" value="Применить фильтры">
-        </div>
+
     </div>
 </form>
 
-
+<!-- Раздел Добавление -->
 <form action="/train_add_ex" method="post">
         <select name="select_exercise" id="select_exercise" class="form-select form-select-md mb-3 me-2" aria-label=".form-select-md example">>
                 {% for ex in exercises %}
@@ -120,11 +136,14 @@
             </div>
 </form>
 
-
+<!-- Раздел Модал переименование -->
 <form action="/train_rename" method="post">
     {% include "modal_rename_train.html" %}
 </form>
 
+<form action="/train_delete" method="post">
+{% include "modal_del_training.html" %}
+</form>
 
 
 {% endblock %}

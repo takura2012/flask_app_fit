@@ -6,10 +6,10 @@
                 <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
             </div>
             <div class="modal-body alert alert-secondary">
+
                 Удалить тренировку: <b>{{train.name}}</b> ?<br>
                 (восстановить удаленную тренировку невозможно)
-
-
+                <input type="hidden" name="train_id_hidden" value="{{train.training_id}}">
 
             </div>
             <div class="modal-footer">

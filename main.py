@@ -112,6 +112,7 @@ def usefilter():
 
     return redirect('index')
 
+# ------------------------------------------------LIST----------------------------------------------------------------
 
 @app.route('/list/<string:counters>/del', methods=['POST','GET'])
 def list_del(counters):
@@ -269,18 +270,18 @@ def create_exercises():
     else:
         return render_template('create_exercises.html', targets=targets, config_filters=config_filters)
 
-
+# ------------------------------------------------TRAIN----------------------------------------------------------------
 @app.route('/train_add_ex', methods=['POST', 'GET'])
 def train_add_ex():
 
     if request.method == 'POST':    # при получении данных с формы
 
-        try:
-            train = session['train']
-        except:
-            return '<h1>Ошибка: Тренировка не найдена</h1>'
-        train_id = train.training_id
-
+        # try:
+        #     train = session['train']
+        # except:
+        #     return '<h1>Ошибка: Тренировка не найдена</h1>'
+        # train_id = train.training_id
+        train_id = request.form.get('train_id_hidden')
         ex_id = request.form.get('select_exercise')
         sets = request.form.get('sets')
         reps = request.form.get('reps')
@@ -303,17 +304,10 @@ def train_add_ex():
     return redirect(url_for('edit_train', train_id=train_id))
 
 
-@app.route('/train_del_exercise/<int:ex_id>')
-def train_del_exercise(ex_id):
-    # для удаления нужно training_id, exercise_id получить с формы
+@app.route('/train_del_exercise/<int:train_id>/<int:ex_id>')
+def train_del_exercise(train_id, ex_id):
 
-    try:
-        train = session['train']
-    except:
-        return 'Ошибка: тренировка для переименования не найдена'
-
-    # training_exercise = TrainingExercise(training_id=train.training_id, exercise_id=ex_id)
-    training_exercise = TrainingExercise.query.filter_by(training_id=train.training_id, exercise_id=ex_id).first()
+    training_exercise = TrainingExercise.query.filter_by(training_id=train_id, exercise_id=ex_id).first()
 
     if training_exercise:
         db.session.delete(training_exercise)
@@ -327,6 +321,30 @@ def train_del_exercise(ex_id):
         return 'TrainingExercise не определено'
 
 
+    return redirect(url_for('edit_train', train_id=train_id))
+
+
+@app.route('/edit_exercise_in_train/<int:train_id>', methods=['POST', 'GET'])
+def edit_exercise_in_train(train_id):
+    try:
+        train = Training.query.get(train_id)
+    except:
+        return 'Ошибка: тренировка не найдена'
+
+    if request.method == 'POST':
+        exercise_id = request.form.get('exercise_id')
+        sets = request.form.get('modal_sets')
+        reps = request.form.get('modal_reps')
+
+        training_exercice = TrainingExercise.query.filter_by(training_id=train_id, exercise_id=exercise_id).first()
+        training_exercice.sets = sets
+        training_exercice.repetitions = reps
+
+        try:
+            db.session.commit()
+        except:
+            return 'Ошибка: не удалось перезаписать в базу новые данные'
+
     return redirect(url_for('edit_train', train_id=train.training_id))
 
 
@@ -338,15 +356,29 @@ def new_train():
 
         train = Training.query.filter_by(name=train_name).first()
 
-        if not train:   # если тренировки не существует то создаю и добавляю в базу
-            train = Training(name=train_name)
-            db.session.add(train)
+        if train:
+            new_train = Training(name=train_name)
+            db.session.add(new_train)
             try:
                 db.session.commit()
-            except Exception as e:
-                return(f'Не удалось сохранить тренировку {train_name} в базу: {e}')
+                new_train.name = f"{train_name} ({new_train.training_id})"
+                db.session.commit()
+            except:
+                db.session.rollback()
+                return 'Ошибка при создании новой тренировки (не сохранились изменения в базе)'
+        else:
+            new_train = Training(name=train_name)
+            db.session.add(new_train)
+            try:
+                db.session.commit()
+            except:
+                db.session.rollback()
+                return 'Ошибка при создании новой тренировки (не сохранились изменения в базе)'
 
-        return redirect(url_for('edit_train', train_id=train.training_id))
+
+        session['train'] = new_train
+
+        return redirect(url_for('edit_train', train_id=new_train.training_id))
 
     trains_list = Training.query.all()
 
@@ -357,7 +389,7 @@ def new_train():
 def edit_train(train_id):
     config_filters = config.FILTER_LIST # основные фильтры из конфига (список списков)
     config_filter_targets = config.FILTER_TARGETS   # список фильтров таргета - групп мышц
-    train = Training.query.filter_by(training_id=train_id).first()  # нахожу тренировку по ID которое передано в роуте
+    train = Training.query.get(train_id)  # нахожу тренировку по ID которое передано в роуте
     exercise_filter_list = session.get('exercise_filter_list', [])  # загрузка списка фильтров из сессии, или пустой
     target_filter = session.get('target_filter','-1')   # загрузка фильтра таргета из сессии, по умолч -1 (все)
 
@@ -380,13 +412,9 @@ def edit_train(train_id):
     else:
         exercises = filtered_exercises  # если фильтр -1 (все) то не фильтрую
 
-
-
     if train:
-        train_name = train.name
         session['train'] = train
-        session['train_name'] = train_name
-        te_info_list = get_training_connections(train_name) # функция для получения связанных с тренировкой полей
+        te_info_list = get_training_connections(train.training_id) # функция для получения связанных с тренировкой полей
         # te_info_list = [[Exercise, sets, repetitions, weight], [...], ...]    -
         session['te_info_list'] = te_info_list
     total_time = 0
@@ -402,17 +430,16 @@ def edit_train(train_id):
 @app.route('/train_rename', methods=['POST', 'GET'])
 def train_rename():
 
-    try:
-        train = session['train']
-    except:
-        return 'Ошибка: тренировка для переименования не найдена'
-
-    train = Training.query.get(train.training_id)
-
-    if train is None:
-        return 'Ошибка: тренировка для переименования не найдена'
-
     if request.method == 'POST':
+
+        train_id = request.form.get('train_id_hidden')
+
+        train = Training.query.get(train_id)
+
+        if train is None:
+            return 'Ошибка: тренировка для переименования не найдена'
+
+
         train_new_name = request.form.get('train_new_name')
 
         train.name = train_new_name
@@ -428,18 +455,16 @@ def train_rename():
 
 @app.route("/train_delete", methods=['POST', 'GET'])
 def train_delete():
-    try:
-        train = session['train']
-    except:
-        return 'Что то пошло не так: тренировка не найдена'
 
-    train = Training.query.get(train.training_id)
-    db.session.delete(train)
-    try:
-        db.session.commit()
-    except:
-        db.session.rollback()
-        return f'Ошибка базы данных: Не удалось удалить тренировку {train.name}'
+    if request.method == 'POST':
+        train_id = request.form.get('train_id_hidden')
+        train = Training.query.get(train_id)
+        db.session.delete(train)
+        try:
+            db.session.commit()
+        except:
+            db.session.rollback()
+            return f'Ошибка базы данных: Не удалось удалить тренировку {train.name}'
 
     return redirect('new_train')
 
@@ -463,7 +488,7 @@ def exercise_filter_list():
 
     return redirect(url_for('edit_train', train_id=train_id))
 
-
+# ------------------------------------------------PLANS----------------------------------------------------------------
 @app.route('/plan_create', methods=['POST', 'GET'])
 def plan_create():
     # берем переменные из конфига и задаем новые пустые для работы с ними
@@ -540,7 +565,7 @@ def plan_load(level_day):
 
     return redirect(url_for('plan_create'))
 
-
+# ------------------------------------------------LOGIC----------------------------------------------------------------
 @app.route('/logic', methods=['POST', 'GET'])
 def logic():
     excluded = session.get('excluded', [])
@@ -607,9 +632,13 @@ def logic_retrieve(ex_id):
 
 @app.route('/migration')
 def migration():
-    session.clear()
     return render_template('migration.html')
 
+
+@app.route('/migration/clear_session')
+def clear_session():
+    session.clear()
+    return redirect('/')
 
 @app.route('/migration/new_base')
 def migration_new():

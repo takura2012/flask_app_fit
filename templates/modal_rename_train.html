@@ -9,7 +9,7 @@
                 Старое имя: <b>{{train.name}}</b>
                 <br><br>
                 <input type="text" class="form-control" name="train_new_name" id="train_new_name" placeholder="Новое имя" required>
-
+                <input type="hidden" id="train_id_hidden" name="train_id_hidden" value="{{train.training_id}}">
             </div>
             <div class="modal-footer">
                 <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Отмена</button>

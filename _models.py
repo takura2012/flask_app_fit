@@ -109,7 +109,6 @@ class TrainingExercise(db.Model):
     weight = db.Column(db.Integer, default=0)
 
 
-
 class Plan(db.Model):
     __tablename__ = 'plans'
 

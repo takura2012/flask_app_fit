@@ -46,9 +46,11 @@
                     {{te_info[1]}}x{{te_info[2]}} ({{te_info[0].time_per_set*te_info[1]}} мин.)
                 </div>
                 <div class="col-2">
-                    <a href="#" class="btn btn-outline-primary btn-sm">Редактировать</a>
-                    <button type="button" class="btn btn-outline-danger btn-sm" data-bs-toggle="modal" data-bs-target="#confirmDelete{{ te_info[0].exercise_id }}">Удалить</button>
-                    {% include "modal_del_exercise_from_train.html" %}
+                    <button type="button" class="btn btn-outline-primary btn-sm" data-bs-toggle="modal" data-bs-target="#confirmDelete{{ te_info[0].exercise_id }}">Редактировать</button>
+                    <form action="/edit_exercise_in_train/{{train.training_id}}" method="post">
+                        {% include "modal_del_exercise_from_train.html" %}
+                    </form>
+
                 </div>
         {% endfor %}
                 <div class="col-6 fs-4">
@@ -114,6 +116,7 @@
 
 <!-- Раздел Добавление -->
 <form action="/train_add_ex" method="post">
+        <input type="hidden" name="train_id_hidden" value="{{train.training_id}}">
         <select name="select_exercise" id="select_exercise" class="form-select form-select-md mb-3 me-2" aria-label=".form-select-md example">>
                 {% for ex in exercises %}
                     <option value="{{ex.exercise_id}}">{{ex.name}}

@@ -96,12 +96,12 @@ def convert_dict_to_list(target_days, groups=config.GROUPS):
     return group_json
 
 
-def get_training_connections(train_name):   # te_info = [te, sets, repetitions, weight] (te- Exercise)
+def get_training_connections(train_id):   # te_info = [te, sets, repetitions, weight] (te- Exercise)
 
-    train = Training.query.filter_by(name=train_name).first()
+    train = Training.query.get(train_id)
     te_info_list = []
 
-    exercise_list = train.exercises  # Упражнения будут в порядке, в котором они находятся в базе
+    # exercise_list = train.exercises  # Упражнения будут в порядке, в котором они находятся в базе
 
     # print(f'_logic: train.exercises= {exercise_list}')
 

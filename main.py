@@ -3,7 +3,7 @@ from flask_migrate import Migrate
 from flask_sqlalchemy import SQLAlchemy
 import json
 import config
-from _models import Exercise, Muscle, ExerciseMuscle, db, User, Plan, TrainingExercise, Training
+from _models import Exercise, Muscle, ExerciseMuscle, db, User, Plan, TrainingExercise, Training, UserTraining, UserTrainingExercise
 from sqlalchemy import Column, Integer, String, ForeignKey, and_, or_
 from sqlalchemy.orm import relationship
 from datetime import datetime
@@ -22,7 +22,6 @@ migrate = Migrate(app, db)
 @app.route('/', methods=['POST', 'GET'])
 def index():
 
-    users = User.query.all()
     const_config = {}
     const_config['levels'] = config.TRAINING_LEVELS
     const_config['filter_list'] = config.FILTER_LIST
@@ -648,6 +647,75 @@ def migration_new():
             return '<h2>Таблицы добавлены</h2>'
         except Exception as e:
             return f'<h2>Ошибка: {str(e)}</h2>'
+
+
+@app.route('/users_center', methods=['POST', 'GET'])
+def users_center():
+
+    user = User.query.filter_by(name='Admin').first()
+    if not user:
+        user = User(
+            name = 'Admin',
+            email = 'takura2012@gmail.com'
+            )
+        db.session.add(user)
+        db.session.commit()
+
+    # добавление всех связей для пользователя
+    if False:
+        # Получаем тренировки, которые хотим назначить пользователю
+        training_ids_to_assign = [2, 3]  # ID тренировок, которые хотим назначить
+        trainings_to_assign = Training.query.filter(Training.training_id.in_(training_ids_to_assign)).all()
+
+        # Создаем объекты UserTraining для каждой тренировки и добавляем их в список
+        user_trainings_to_assign = []
+        for training in trainings_to_assign:
+            user_training = UserTraining(
+                user=user,
+                training=training,
+                assigned=True  # Устанавливаем флаг, что тренировка назначена
+            )
+            user_trainings_to_assign.append(user_training)
+
+        # Добавляем список объектов UserTraining в сессию и коммитим изменения
+        db.session.add_all(user_trainings_to_assign)
+        db.session.commit()
+
+        # Получаем тренировки, для которых нужно создать UserTrainingExercise
+        trainings_to_assign = Training.query.filter(Training.training_id.in_(training_ids_to_assign)).all()
+
+        # Создаем объекты UserTrainingExercise для каждой тренировки и упражнения
+        for user_training in user.trainings:
+            for training_exercise in user_training.training.exercises:
+                training_exercise_in_db = TrainingExercise.query.filter_by(training_id=user_training.training_id,
+                                                                           exercise_id=training_exercise.exercise_id).first()
+                user_training_exercise = UserTrainingExercise(
+                    user_training=user_training,
+                    exercise=training_exercise,
+                    sets=training_exercise_in_db.sets,
+                    repetitions=training_exercise_in_db.repetitions,
+                    weight=0  # Ваше значение веса
+                )
+                db.session.add(user_training_exercise)
+
+        # Добавление изменений в базу данных
+        db.session.commit()
+
+
+    # вывод от пользователя всех его объектов
+    if False:
+        user_trainings = user.trainings
+        # список объектов UserTraining из за trainings = relationship('UserTraining', back_populates='user') в классе User
+        for user_train in user_trainings:
+            print(user_train.training)
+            for ex in user_train.training.exercises:
+                print(ex)
+                for user_training_exercise in ex.user_training_exercises:
+                    print(user_training_exercise.sets, user_training_exercise.repetitions)
+
+
+
+    return render_template('users_center.html', user=user)
 
 
 if __name__ == '__main__':

@@ -6,19 +6,6 @@ from datetime import datetime
 
 db = SQLAlchemy()
 
-
-class User(db.Model):
-    __tablename__ = 'users'
-
-    id = db.Column(db.Integer, primary_key=True)
-    name = db.Column(db.String(30), nullable=False)
-    experience = db.Column(db.Integer, default=0)  # exp = train*strength
-    level = db.Column(db.Integer, default=0)
-
-    def __repr__(self):
-        return f'User {self.id}'
-
-
 class Exercise(db.Model):
     __tablename__ = 'exercises'
 
@@ -31,6 +18,7 @@ class Exercise(db.Model):
     counter = db.Column(db.Integer, default=0)
     filters = db.Column(JSON, default=[])   # LOCATION_FILTERS.keys
 
+    user_training_exercises = relationship('UserTrainingExercise', back_populates='exercise')
     muscles = relationship('Muscle', secondary='exercise_muscles')
     training = db.relationship('Training', secondary='training_exercises', overlaps="exercises")
 
@@ -86,13 +74,9 @@ class Training(db.Model):
 
     training_id = db.Column(db.Integer, primary_key=True)
     name = db.Column(db.String(50), nullable=False)
-    assigned = db.Column(db.Boolean, default=False)
-    completed = db.Column(db.Boolean, default=False)
-    date_created = db.Column(db.DateTime, nullable=False, default=datetime.utcnow())
-    date_complited = db.Column(db.DateTime)
 
     exercises = relationship('Exercise', secondary='training_exercises', overlaps="trainings")
-
+    user_trainings = relationship('UserTraining', back_populates='training')
 
     def __repr__(self):
         return 'Training %r' % self.training_id
@@ -106,7 +90,6 @@ class TrainingExercise(db.Model):
     exercise_id = db.Column(db.Integer, db.ForeignKey('exercises.exercise_id', ondelete='CASCADE'))
     sets = db.Column(db.Integer)
     repetitions = db.Column(db.Integer)
-    weight = db.Column(db.Integer, default=0)
 
 
 class Plan(db.Model):
@@ -119,6 +102,50 @@ class Plan(db.Model):
     sets_low = db.Column(db.String(10), default='3x8')
     rec = db.Column(db.String(200), default='1_1')
     groups = db.Column(JSON, default=[])
+
+
+class User(db.Model):
+    __tablename__ = 'users'
+
+    id = db.Column(db.Integer, primary_key=True)
+    name = db.Column(db.String(50), nullable=False, unique=True)
+    email = db.Column(db.String(50), nullable=False, unique=True)
+    level = db.Column(db.Integer, default=0)
+
+    trainings = relationship('UserTraining', back_populates='user')
+
+    def __repr__(self):
+        return f'User {self.id}'
+
+
+class UserTraining(db.Model):
+    __tablename__ = 'user_trainings'
+
+    id = Column(Integer, primary_key=True)
+    user_id = Column(Integer, ForeignKey('users.id'))
+    training_id = Column(Integer, ForeignKey('trainings.training_id'))
+    assigned = Column(db.Boolean, default=False)
+    completed = Column(db.Boolean, default=False)
+    date_created = Column(db.DateTime, default=datetime.utcnow)
+    date_completed = Column(db.DateTime)
+
+    user = relationship('User', back_populates='trainings')
+    training = relationship('Training', back_populates='user_trainings')
+    training_exercises = relationship('UserTrainingExercise', back_populates='user_training')
+
+
+
+class UserTrainingExercise(db.Model):
+    __tablename__ = 'user_training_exercises'
+    id = Column(Integer, primary_key=True)
+    user_training_id = Column(Integer, ForeignKey('user_trainings.id'))
+    exercise_id = Column(Integer, ForeignKey('exercises.exercise_id'))
+    sets = Column(Integer)
+    repetitions = Column(Integer)
+    weight = Column(Integer)
+
+    user_training = relationship('UserTraining', back_populates='training_exercises')
+    exercise = relationship('Exercise', back_populates='user_training_exercises')
 
 
 if __name__ == '__main__':

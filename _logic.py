@@ -96,7 +96,7 @@ def convert_dict_to_list(target_days, groups=config.GROUPS):
     return group_json
 
 
-def get_training_connections(train_id):   # te_info = [te, sets, repetitions, weight] (te- Exercise)
+def get_training_connections(train_id):   # te_info = [te, sets, repetitions] (te- Exercise)
 
     train = Training.query.get(train_id)
     te_info_list = []
@@ -112,9 +112,8 @@ def get_training_connections(train_id):   # te_info = [te, sets, repetitions, we
         if training_exercise:  # и выбираем связанные сеты повторы и веса (которые 0 по умолчанию)
             sets = training_exercise.sets
             repetitions = training_exercise.repetitions
-            weight = training_exercise.weight
 
-            te_info = [te, sets, repetitions, weight]
+            te_info = [te, sets, repetitions]
             te_info_list.append(te_info)
 
     return te_info_list

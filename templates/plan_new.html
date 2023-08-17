@@ -1,0 +1,36 @@
+{% extends 'base.html' %}
+{% block title %}
+Новый план
+{% endblock %}
+
+{% block body %}
+
+
+<div class="row">
+    <div class="col-8">
+        <h1>Новый план</h1>
+    </div>
+    <div class="col-4">
+        <a href="#" class="btn btn-success">Сохранить</a>
+    </div>
+</div>
+
+<input type="text" class="form-control" placeholder="Название нового плана (например: 3 дня, новичок, фулбоди)" required>
+<div class="row">
+    <div class="col-6">
+        Тренировки в плане
+    </div>
+    <div class="col-6">
+        <ul class="nav flex-column mb-0">
+            {% for train in trainings %}
+            <li class="mb-0">
+                <a href="#" class="nav-link link-underline link-underline-opacity-0 bg-opacity-0" data-bs-toggle="modal" data-bs-target="#modal_training_to_plan{{train.training_id}}">{{train.name}}</a>
+                {% include "modal_training_to_plan.html" %}
+            </li>
+            {% endfor %}
+        </ul>
+    </div>
+</div>
+
+
+{% endblock %}

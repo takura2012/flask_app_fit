@@ -5,9 +5,6 @@ body {
     background-attachment: fixed;
 }
 
-.bg-opacity-0 {
-    background-color: rgba(0, 0, 0, 0); /* Прозрачный цвет фона */
-}
 
 .bg-opacity-50 {
     background-color: rgba(0, 0, 0, 0.5); /* Прозрачный цвет фона */
@@ -15,4 +12,13 @@ body {
 
 .bg-opacity-20 {
     background-color: rgba(0, 0, 0, 0.2); /* Прозрачный цвет фона */
+}
+
+.bg-opacity-0 {
+    background-color: rgba(0, 0, 0, 0); /* Прозрачный цвет фона */
+    transition: background-color 0.3s; /* Добавим плавный переход для hover */
+}
+
+.bg-opacity-0:hover {
+    background-color: rgba(0, 0, 0, 0.2); /* Полупрозрачный черный цвет фона при hover */
 }

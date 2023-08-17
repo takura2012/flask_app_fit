@@ -3,7 +3,8 @@ from flask_migrate import Migrate
 from flask_sqlalchemy import SQLAlchemy
 import json
 import config
-from _models import Exercise, Muscle, ExerciseMuscle, db, User, Plan, TrainingExercise, Training, UserTraining, UserTrainingExercise
+from _models import Exercise, Muscle, ExerciseMuscle, db, User, Plan, TrainingExercise, \
+    Training, UserTraining, UserTrainingExercise, plan_trainings
 from sqlalchemy import Column, Integer, String, ForeignKey, and_, or_
 from sqlalchemy.orm import relationship
 from datetime import datetime
@@ -21,75 +22,9 @@ migrate = Migrate(app, db)
 @app.route('/index', methods=['POST', 'GET'])
 @app.route('/', methods=['POST', 'GET'])
 def index():
+    flash('Flash message: index is empty')
 
-    const_config = {}
-    const_config['levels'] = config.TRAINING_LEVELS
-    const_config['filter_list'] = config.FILTER_LIST
-    index_dict = session.get('index_dict', {})
-    if 'filter_list' not in index_dict:
-        index_dict['filter_list'] = ['1','4','7','8']
-    print(index_dict['filter_list'])
-
-    plan = None
-    level = None
-    selected_forday = None
-    week_days = None
-    times_for_train = None
-
-
-    if request.method == 'POST':
-        user_level = request.form.get('select_level')
-        days = request.form.get('days')
-
-        try:
-            week_days = int(days)
-        except:
-            flash('Нужно ввести количество тренировочных дней в неделю')
-            return redirect(url_for('index'))
-
-        if week_days<1 or week_days>7:
-            flash('Количество тренировочных дней в неделю должно быть от 1 до 7')
-            return redirect(url_for('index'))
-
-        index_dict['level'] = str(user_level)
-        index_dict['days'] = str(week_days)
-        session['index_dict'] = index_dict
-
-        level_day = str(user_level)+'_'+str(week_days)
-
-        plan = Plan.query.filter_by(level_day=level_day).first()
-        if not plan:
-            flash('Для таких параметров в базе нет шаблона тренировок')
-            return redirect(url_for('index'))
-
-
-        targets_list = convert_dict_to_list(plan.groups)
-
-        max_effort = plan.strength
-        level = config.TRAINING_LEVELS[plan.level_day[:1]]
-
-        excluded = []
-        selected_forday = []
-        excluded_forday = []
-        exercises_forday = []
-
-        exercises = Exercise.query.all()
-
-        for day in range(week_days):
-            selected_result = select_exercises(targets_list[day], max_effort, excluded, index_dict['filter_list'])
-            selected_forday.append([res for res in selected_result])
-            excluded.extend(ex.exercise_id for ex in selected_forday[day] if ex.difficulty >= 50)
-            excluded_forday.append([ex for ex in excluded])
-
-        times_for_train = []
-        for day in range(week_days):
-            time_for_day = 0
-            for ex in selected_forday[day]:
-                time_for_day += ex.time_per_set
-            times_for_train.append(time_for_day)
-
-    return render_template("index.html", plan=plan, level=level, index_dict=index_dict, const_config=const_config,
-                           selected_forday=selected_forday, times_for_train=times_for_train)
+    return render_template("index.html")
 
 
 @app.route('/usefilter', methods=['POST'])
@@ -488,81 +423,28 @@ def exercise_filter_list():
     return redirect(url_for('edit_train', train_id=train_id))
 
 # ------------------------------------------------PLANS----------------------------------------------------------------
-@app.route('/plan_create', methods=['POST', 'GET'])
-def plan_create():
-    # берем переменные из конфига и задаем новые пустые для работы с ними
-    levels = config.TRAINING_LEVELS
-    groups = config.GROUPS
-    targets_dict = {}
+@app.route('/plans_all', methods=['POST', 'GET'])
+def plans_all():
 
-    # словарь из сессии со всеми данными сессии
-    bmi_dict = session.get('bmi_dict', {})
-
-    # берем из базы все планы для вывода на странице
-    plans = Plan.query.all()
-
-    # берем данные с формы, если они отправлены
-    if request.method == 'POST':
-        # берем данные из инпутов на форме по имени days_{key} где key это ключ из словаря GROUPS
-        # делаем словарь targets_dict[key] = value {'fullbody':'1,2,3', ...}
-        for key, group in groups.items():
-            input_name = f'days_{key}'
-            value = request.form.get(input_name)
-            if value != '':
-                targets_dict[key] = value
-
-        bmi_dict['level_day'] = request.form.get('level_day')
-        bmi_dict['strength'] = request.form.get('strength')
-        bmi_dict['sets_high'] = request.form.get('sets_high')
-        bmi_dict['sets_low'] = request.form.get('sets_low')
-        bmi_dict['rec'] = request.form.get('rec')
-        bmi_dict['groups'] = targets_dict
-
-        # работа с базой данных. делаю элемент класса план и сохраняю его
-        plan = Plan(
-            level_day = bmi_dict['level_day'],
-            strength = bmi_dict['strength'],
-            sets_high = bmi_dict['sets_high'],
-            sets_low = bmi_dict['sets_low'],
-            rec = bmi_dict['rec'],
-            groups = targets_dict
-        )
-
-        # если запись с level_day существует в базе то просто комит, если нет то добавить
-        existing_record = Plan.query.filter_by(level_day=plan.level_day).first()
-        if not existing_record:
-            db.session.add(plan)
-        else:
-            for field in ['strength', 'sets_high', 'sets_low', 'rec', 'groups']:
-                setattr(existing_record, field, getattr(plan, field))
-
-        try:
-            db.session.commit()
-        except:
-            db.session.rollback()
-            return 'Ошибка при сохранении плана \n'
-
-        session['bmi_dict'] = bmi_dict
-        return redirect(url_for('plan_create'))
-
-    return render_template('plan_create.html', levels=levels, bmi_dict=bmi_dict, groups=groups, plans=plans)
+    return render_template('plans_all.html')
 
 
-@app.route('/plan_load/<string:level_day>')
-def plan_load(level_day):
-    plan = Plan.query.filter_by(level_day=level_day).first()
-    bmi_dict = {}
+@app.route('/plan_new', methods=['POST', 'GET'])
+def plans_new():
+    trainings = Training.query.all()
 
-    bmi_dict['level_day'] = plan.level_day
-    bmi_dict['strength'] = plan.strength
-    bmi_dict['sets_high'] = plan.sets_high
-    bmi_dict['sets_low'] = plan.sets_low
-    bmi_dict['rec'] = plan.rec
-    bmi_dict['groups'] = plan.groups
 
-    session['bmi_dict'] = bmi_dict
+    for train in trainings:
+        print(f'Train: {train.name}')
+        exercises = train.exercises
+        for ex in exercises:
+            for training_exercise in ex.training_exercises:
+                if training_exercise.training_id == train.training_id:
+                    print(f'{ex.name} {training_exercise.sets}x{training_exercise.repetitions}')
 
-    return redirect(url_for('plan_create'))
+
+
+    return render_template('plan_new.html', trainings=trainings)
 
 # ------------------------------------------------LOGIC----------------------------------------------------------------
 @app.route('/logic', methods=['POST', 'GET'])
@@ -648,6 +530,7 @@ def migration_new():
         except Exception as e:
             return f'<h2>Ошибка: {str(e)}</h2>'
 
+# ------------------------------------------------USER----------------------------------------------------------------
 
 @app.route('/users_center', methods=['POST', 'GET'])
 def users_center():

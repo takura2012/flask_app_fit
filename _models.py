@@ -21,6 +21,8 @@ class Exercise(db.Model):
     user_training_exercises = relationship('UserTrainingExercise', back_populates='exercise')
     muscles = relationship('Muscle', secondary='exercise_muscles')
     training = db.relationship('Training', secondary='training_exercises', overlaps="exercises")
+    training_exercises = relationship('TrainingExercise', back_populates='exercise')
+
 
     def __repr__(self):
         return 'Exercise %r' % self.exercise_id
@@ -77,6 +79,7 @@ class Training(db.Model):
 
     exercises = relationship('Exercise', secondary='training_exercises', overlaps="trainings")
     user_trainings = relationship('UserTraining', back_populates='training')
+    plans = relationship('Plan', secondary='plan_trainings', back_populates='trainings')
 
     def __repr__(self):
         return 'Training %r' % self.training_id
@@ -90,18 +93,23 @@ class TrainingExercise(db.Model):
     exercise_id = db.Column(db.Integer, db.ForeignKey('exercises.exercise_id', ondelete='CASCADE'))
     sets = db.Column(db.Integer)
     repetitions = db.Column(db.Integer)
+    exercise = relationship('Exercise', back_populates='training_exercises')
 
 
 class Plan(db.Model):
     __tablename__ = 'plans'
 
     id = db.Column(db.Integer, primary_key=True)
-    level_day = db.Column(db.String(10), unique=True, nullable=False)
-    strength = db.Column(db.Integer, default=70)
-    sets_high = db.Column(db.String(10), default='3x16')
-    sets_low = db.Column(db.String(10), default='3x8')
-    rec = db.Column(db.String(200), default='1_1')
-    groups = db.Column(JSON, default=[])
+    name = db.Column(db.String, default='New Plan')
+    owner = db.Column(db.String, default='Admin')
+
+    trainings = relationship('Training', secondary='plan_trainings', back_populates='plans')
+
+
+plan_trainings = db.Table('plan_trainings',
+    db.Column('plan_id', db.Integer, db.ForeignKey('plans.id', ondelete='CASCADE'), primary_key=True),
+    db.Column('training_id', db.Integer, db.ForeignKey('trainings.training_id', ondelete='CASCADE'), primary_key=True)
+)
 
 
 class User(db.Model):

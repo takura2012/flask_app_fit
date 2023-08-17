@@ -1,16 +1,22 @@
-<div class="modal fade" id="confirmAddPlan" tabindex="-1" aria-labelledby="confirmAddPlanLabel" aria-hidden="true">
+<div class="modal fade" id="modal_training_to_plan{{train.training_id}}" tabindex="-1" aria-labelledby="modal_training_to_planLabel" aria-hidden="true">
     <div class="modal-dialog modal-dialog-centered">
         <div class="modal-content">
             <div class="modal-header">
-                <h3 class="modal-title" id="confirmAddPlanLabel">Добавление записи</h3>
+                <h3 class="modal-title" id="modal_training_to_planlanLabel">{{train.name}}</h3>
                 <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
             </div>
             <div class="modal-body alert alert-secondary">
-                <b>Добавить объект Плана</b>
+
+                {% for ex in train.exercises %}
+                    {{ ex.name }}
+
+
+                {% endfor %}
+
             </div>
             <div class="modal-footer">
                 <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Отмена</button>
-                <button type="submit" class="btn btn-success">Добавить запись</button>
+                <button type="submit" class="btn btn-success">Добавить в план</button>
             </div>
         </div>
     </div>

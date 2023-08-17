@@ -1,7 +1,7 @@
 # Создайте структуру данных, чтобы хранить информацию об упражнениях, мышцах и нагрузке.
 # Загрузите данные из вашей базы данных в эту структуру
 import random, config
-from _models import Exercise, Muscle, Training, ExerciseMuscle, TrainingExercise
+from _models import Exercise, Muscle, Training, ExerciseMuscle, TrainingExercise, Plan
 from typing import List
 from sqlalchemy import or_
 
@@ -117,3 +117,14 @@ def get_training_connections(train_id):   # te_info = [te, sets, repetitions] (t
             te_info_list.append(te_info)
 
     return te_info_list
+
+
+def generate_unique_plan_name(base_name):
+    name = base_name
+    counter = 1
+
+    while Plan.query.filter_by(name=name).first():
+        name = f"{base_name}({counter})"
+        counter += 1
+
+    return name

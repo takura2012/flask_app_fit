@@ -2,15 +2,18 @@
     <div class="modal-dialog modal-dialog-centered">
         <div class="modal-content">
             <div class="modal-header">
-                <h3 class="modal-title" id="modal_training_to_planlanLabel">{{train.name}}</h3>
+                <h5 class="modal-title" id="modal_training_to_planlanLabel">{{train.name}}</h5>
                 <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
             </div>
             <div class="modal-body alert alert-secondary">
 
                 {% for ex in train.exercises %}
-                    {{ ex.name }}
-
-
+                    {{loop.index}}.
+                    {% for training_exercise in ex.training_exercises %}
+                        {% if training_exercise.training_id == train.training_id %}
+                            {{ex.name}} {{training_exercise.sets}}x{{training_exercise.repetitions}} <br>
+                        {% endif %}
+                    {% endfor %}
                 {% endfor %}
 
             </div>

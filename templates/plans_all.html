@@ -4,25 +4,31 @@
 {% endblock %}
 
 {% block body %}
-<div class="row">
-    <div class="col-8">
-        <h1>Тренировочные планы</h1>
+<h1>Тренировочные планы</h1>
+
+<form action="/plan_new" method="post">
+    <div class="row mb-3">
+        <div class="col-6">
+            <input type="text" name="plan_name" id="plan_name" class="form-control" placeholder="Название нового плана (например: 3 дня, новичок, фулбоди)" required>
+        </div>
+        <div class="col-6">
+
+        </div>
     </div>
-    <div class="col-4">
-        <a href="/plan_new" class="btn btn-primary">Новый план</a>
-    </div>
-</div>
+    <input type="submit" class="btn btn-primary" value="Создать">
+</form>
+
 
 <hr>
 <div class="row">
     <div class="col-6">
         <h5>Список тренировочных планов пользователя (для редактирования удаления просмотра и назначения)</h5>
-
         <div class="list-group" id="list-tab" role="tablist">
-          <a class="nav-link active link-underline link-underline-opacity-0 bg-opacity-0" id="list-home-list" data-bs-toggle="list" href="#list-home" role="tab" aria-controls="list-home">Назвавние плана1</a>
-          <a class="nav-link link-underline link-underline-opacity-0 bg-opacity-0" id="list-profile-list" data-bs-toggle="list" href="#list-profile" role="tab" aria-controls="list-profile">Назвавние плана2</a>
-          <a class="nav-link link-underline link-underline-opacity-0 bg-opacity-0" id="list-messages-list" data-bs-toggle="list" href="#list-messages" role="tab" aria-controls="list-messages">Messages</a>
-          <a class="nav-link link-underline link-underline-opacity-0 bg-opacity-0" id="list-settings-list" data-bs-toggle="list" href="#list-settings" role="tab" aria-controls="list-settings">Settings</a>
+
+          <a class="nav-link active link-underline link-underline-opacity-0 bg-opacity-0" data-bs-toggle="list" href="#plan{{plans[0].id}}" role="tab">{{plans[0].name}}</a>
+          <a class="nav-link link-underline link-underline-opacity-0 bg-opacity-0" data-bs-toggle="list" href="#plan2" role="tab">Назвавние плана2</a>
+          <a class="nav-link link-underline link-underline-opacity-0 bg-opacity-0" data-bs-toggle="list" href="#plan3" role="tab">Messages</a>
+          <a class="nav-link link-underline link-underline-opacity-0 bg-opacity-0" data-bs-toggle="list" href="#plan4" role="tab">Settings</a>
         </div>
     </div>
 
@@ -32,7 +38,7 @@
 
 
         <div class="tab-content" id="nav-tabContent">
-          <div class="tab-pane fade show active" id="list-home" role="tabpanel" aria-labelledby="list-home-list">
+          <div class="tab-pane fade show active" id="plan1" role="tabpanel">
                 <h5>Назвавние плана1 - Тренировки в плане</h5>
                 <a href="#" class="btn btn-success">Назначить</a>
                 <a href="#" class="btn btn-outline-primary">Редактировать</a>
@@ -40,7 +46,7 @@
               Тренировка1 <br>
               Тренировка2
           </div>
-          <div class="tab-pane fade" id="list-profile" role="tabpanel" aria-labelledby="list-profile-list">
+          <div class="tab-pane fade" id="plan2" role="tabpanel">
               <h5>Назвавние плана2 - Тренировки в плане</h5>
                 <a href="#" class="btn btn-success">Назначить</a>
                 <a href="#" class="btn btn-outline-primary">Редактировать</a>
@@ -48,8 +54,8 @@
               Тренировка3 <br>
               Тренировка4
           </div>
-          <div class="tab-pane fade" id="list-messages" role="tabpanel" aria-labelledby="list-messages-list">3333</div>
-          <div class="tab-pane fade" id="list-settings" role="tabpanel" aria-labelledby="list-settings-list">4444</div>
+          <div class="tab-pane fade" id="plan3" role="tabpanel" >3333</div>
+          <div class="tab-pane fade" id="plan4" role="tabpanel" >4444</div>
         </div>
     </div>
 </div>

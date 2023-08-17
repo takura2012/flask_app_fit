@@ -426,25 +426,36 @@ def exercise_filter_list():
 @app.route('/plans_all', methods=['POST', 'GET'])
 def plans_all():
 
-    return render_template('plans_all.html')
+    plans = Plan.query.all()
+
+    return render_template('plans_all.html', plans=plans)
 
 
 @app.route('/plan_new', methods=['POST', 'GET'])
 def plans_new():
     trainings = Training.query.all()
 
+    # for train in trainings:
+    #     for ex in train.exercises:
+    #         for training_exercise in ex.training_exercises:
+    #             if training_exercise.training_id == train.training_id:
+    #                 print(f'{ex.name} {training_exercise.sets}x{training_exercise.repetitions}')
 
-    for train in trainings:
-        print(f'Train: {train.name}')
-        exercises = train.exercises
-        for ex in exercises:
-            for training_exercise in ex.training_exercises:
-                if training_exercise.training_id == train.training_id:
-                    print(f'{ex.name} {training_exercise.sets}x{training_exercise.repetitions}')
+    if request.method == 'POST':
+        plan_name = request.form.get('plan_name')
 
+        unique_name = generate_unique_plan_name(plan_name)
 
+        plan = Plan(name=unique_name)
+        db.session.add(plan)
 
-    return render_template('plan_new.html', trainings=trainings)
+        try:
+            db.session.commit()
+        except:
+            db.session.rollback()
+            return 'Ошибка при создании нового плана тренировок'
+
+    return render_template('plan_new.html', trainings=trainings, plan=plan)
 
 # ------------------------------------------------LOGIC----------------------------------------------------------------
 @app.route('/logic', methods=['POST', 'GET'])

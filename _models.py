@@ -37,38 +37,6 @@ class Exercise(db.Model):
             raise e
 
 
-class Muscle(db.Model):
-    __tablename__ = 'muscles'
-
-    muscle_id = db.Column(db.Integer, primary_key=True)
-    muscle_name = db.Column(db.String(50), nullable=False)
-    counter = db.Column(db.Integer, default=0)
-
-    exercises = db.relationship('Exercise', secondary='exercise_muscles', overlaps="muscles")
-
-    def __repr__(self):
-        return 'Muscle %r' % self.muscle_id
-
-    @classmethod
-    def update_counters(cls):
-        muscles = cls.query.all()  # Получаем все записи класса Muscle из базы данных
-        for counter, muscle in enumerate(muscles, start=1):
-            muscle.counter = counter
-        try:
-            db.session.commit()  # Сохраняем изменения в базе данных
-        except Exception as e:
-            db.session.rollback()  # Откатываем изменения в случае возникновения ошибки
-            raise e
-
-
-class ExerciseMuscle(db.Model):
-    __tablename__ = 'exercise_muscles'
-
-    exercise_id = Column(Integer, ForeignKey('exercises.exercise_id', ondelete='CASCADE'), primary_key=True)
-    muscle_id = Column(Integer, ForeignKey('muscles.muscle_id', ondelete='CASCADE'), primary_key=True)
-    percent = Column(Integer, default=0)
-
-
 class Training(db.Model):
     __tablename__ = 'trainings'
 
@@ -90,18 +58,6 @@ class TrainingExercise(db.Model):
     exercise_id = db.Column(db.Integer, db.ForeignKey('exercises.exercise_id', ondelete='CASCADE'))
     sets = db.Column(db.Integer)
     repetitions = db.Column(db.Integer)
-
-
-class Plan(db.Model):
-    __tablename__ = 'plans'
-
-    id = db.Column(db.Integer, primary_key=True)
-    level_day = db.Column(db.String(10), unique=True, nullable=False)
-    strength = db.Column(db.Integer, default=70)
-    sets_high = db.Column(db.String(10), default='3x16')
-    sets_low = db.Column(db.String(10), default='3x8')
-    rec = db.Column(db.String(200), default='1_1')
-    groups = db.Column(JSON, default=[])
 
 
 class User(db.Model):
@@ -134,7 +90,6 @@ class UserTraining(db.Model):
     training_exercises = relationship('UserTrainingExercise', back_populates='user_training')
 
 
-
 class UserTrainingExercise(db.Model):
     __tablename__ = 'user_training_exercises'
     id = Column(Integer, primary_key=True)
@@ -146,6 +101,50 @@ class UserTrainingExercise(db.Model):
 
     user_training = relationship('UserTraining', back_populates='training_exercises')
     exercise = relationship('Exercise', back_populates='user_training_exercises')
+
+
+class Muscle(db.Model):
+    __tablename__ = 'muscles'
+
+    muscle_id = db.Column(db.Integer, primary_key=True)
+    muscle_name = db.Column(db.String(50), nullable=False)
+    counter = db.Column(db.Integer, default=0)
+
+    exercises = db.relationship('Exercise', secondary='exercise_muscles', overlaps="muscles")
+
+    def __repr__(self):
+        return 'Muscle %r' % self.muscle_id
+
+    @classmethod
+    def update_counters(cls):
+        muscles = cls.query.all()  # Получаем все записи класса Muscle из базы данных
+        for counter, muscle in enumerate(muscles, start=1):
+            muscle.counter = counter
+        try:
+            db.session.commit()  # Сохраняем изменения в базе данных
+        except Exception as e:
+            db.session.rollback()  # Откатываем изменения в случае возникновения ошибки
+            raise e
+
+
+class ExerciseMuscle(db.Model):
+    __tablename__ = 'exercise_muscles'
+
+    exercise_id = Column(Integer, ForeignKey('exercises.exercise_id', ondelete='CASCADE'), primary_key=True)
+    muscle_id = Column(Integer, ForeignKey('muscles.muscle_id', ondelete='CASCADE'), primary_key=True)
+    percent = Column(Integer, default=0)
+
+
+class Plan(db.Model):
+    __tablename__ = 'plans'
+
+    id = db.Column(db.Integer, primary_key=True)
+    level_day = db.Column(db.String(10), unique=True, nullable=False)
+    strength = db.Column(db.Integer, default=70)
+    sets_high = db.Column(db.String(10), default='3x16')
+    sets_low = db.Column(db.String(10), default='3x8')
+    rec = db.Column(db.String(200), default='1_1')
+    groups = db.Column(JSON, default=[])
 
 
 if __name__ == '__main__':

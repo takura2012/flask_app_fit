@@ -28,7 +28,6 @@ def index():
     index_dict = session.get('index_dict', {})
     if 'filter_list' not in index_dict:
         index_dict['filter_list'] = ['1','4','7','8']
-    print(index_dict['filter_list'])
 
     plan = None
     level = None
@@ -701,7 +700,6 @@ def users_center():
         # Добавление изменений в базу данных
         db.session.commit()
 
-
     # вывод от пользователя всех его объектов
     if False:
         user_trainings = user.trainings
@@ -712,8 +710,6 @@ def users_center():
                 print(ex)
                 for user_training_exercise in ex.user_training_exercises:
                     print(user_training_exercise.sets, user_training_exercise.repetitions)
-
-
 
     return render_template('users_center.html', user=user)
 

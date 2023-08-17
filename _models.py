@@ -21,6 +21,8 @@ class Exercise(db.Model):
     user_training_exercises = relationship('UserTrainingExercise', back_populates='exercise')
     muscles = relationship('Muscle', secondary='exercise_muscles')
     training = db.relationship('Training', secondary='training_exercises', overlaps="exercises")
+    training_exercises = relationship('TrainingExercise', back_populates='exercise')
+
 
     def __repr__(self):
         return 'Exercise %r' % self.exercise_id
@@ -35,72 +37,6 @@ class Exercise(db.Model):
         except Exception as e:
             db.session.rollback()  # Откатываем изменения в случае возникновения ошибки
             raise e
-
-
-class Training(db.Model):
-    __tablename__ = 'trainings'
-
-    training_id = db.Column(db.Integer, primary_key=True)
-    name = db.Column(db.String(50), nullable=False)
-
-    exercises = relationship('Exercise', secondary='training_exercises', overlaps="trainings")
-    user_trainings = relationship('UserTraining', back_populates='training')
-
-    def __repr__(self):
-        return 'Training %r' % self.training_id
-
-
-class TrainingExercise(db.Model):
-    __tablename__ = 'training_exercises'
-
-    id = db.Column(db.Integer, primary_key=True)
-    training_id = db.Column(db.Integer, db.ForeignKey('trainings.training_id', ondelete='CASCADE'))
-    exercise_id = db.Column(db.Integer, db.ForeignKey('exercises.exercise_id', ondelete='CASCADE'))
-    sets = db.Column(db.Integer)
-    repetitions = db.Column(db.Integer)
-
-
-class User(db.Model):
-    __tablename__ = 'users'
-
-    id = db.Column(db.Integer, primary_key=True)
-    name = db.Column(db.String(50), nullable=False, unique=True)
-    email = db.Column(db.String(50), nullable=False, unique=True)
-    level = db.Column(db.Integer, default=0)
-
-    trainings = relationship('UserTraining', back_populates='user')
-
-    def __repr__(self):
-        return f'User {self.id}'
-
-
-class UserTraining(db.Model):
-    __tablename__ = 'user_trainings'
-
-    id = Column(Integer, primary_key=True)
-    user_id = Column(Integer, ForeignKey('users.id'))
-    training_id = Column(Integer, ForeignKey('trainings.training_id'))
-    assigned = Column(db.Boolean, default=False)
-    completed = Column(db.Boolean, default=False)
-    date_created = Column(db.DateTime, default=datetime.utcnow)
-    date_completed = Column(db.DateTime)
-
-    user = relationship('User', back_populates='trainings')
-    training = relationship('Training', back_populates='user_trainings')
-    training_exercises = relationship('UserTrainingExercise', back_populates='user_training')
-
-
-class UserTrainingExercise(db.Model):
-    __tablename__ = 'user_training_exercises'
-    id = Column(Integer, primary_key=True)
-    user_training_id = Column(Integer, ForeignKey('user_trainings.id'))
-    exercise_id = Column(Integer, ForeignKey('exercises.exercise_id'))
-    sets = Column(Integer)
-    repetitions = Column(Integer)
-    weight = Column(Integer)
-
-    user_training = relationship('UserTraining', back_populates='training_exercises')
-    exercise = relationship('Exercise', back_populates='user_training_exercises')
 
 
 class Muscle(db.Model):
@@ -135,16 +71,89 @@ class ExerciseMuscle(db.Model):
     percent = Column(Integer, default=0)
 
 
+class Training(db.Model):
+    __tablename__ = 'trainings'
+
+    training_id = db.Column(db.Integer, primary_key=True)
+    name = db.Column(db.String(50), nullable=False)
+
+    exercises = relationship('Exercise', secondary='training_exercises', overlaps="trainings")
+    user_trainings = relationship('UserTraining', back_populates='training')
+    plans = relationship('Plan', secondary='plan_trainings', back_populates='trainings')
+
+    def __repr__(self):
+        return 'Training %r' % self.training_id
+
+
+class TrainingExercise(db.Model):
+    __tablename__ = 'training_exercises'
+
+    id = db.Column(db.Integer, primary_key=True)
+    training_id = db.Column(db.Integer, db.ForeignKey('trainings.training_id', ondelete='CASCADE'))
+    exercise_id = db.Column(db.Integer, db.ForeignKey('exercises.exercise_id', ondelete='CASCADE'))
+    sets = db.Column(db.Integer)
+    repetitions = db.Column(db.Integer)
+    exercise = relationship('Exercise', back_populates='training_exercises')
+
+
 class Plan(db.Model):
     __tablename__ = 'plans'
 
     id = db.Column(db.Integer, primary_key=True)
-    level_day = db.Column(db.String(10), unique=True, nullable=False)
-    strength = db.Column(db.Integer, default=70)
-    sets_high = db.Column(db.String(10), default='3x16')
-    sets_low = db.Column(db.String(10), default='3x8')
-    rec = db.Column(db.String(200), default='1_1')
-    groups = db.Column(JSON, default=[])
+    name = db.Column(db.String, default='New Plan')
+    owner = db.Column(db.String, default='Admin')
+
+    trainings = relationship('Training', secondary='plan_trainings', back_populates='plans')
+
+
+plan_trainings = db.Table('plan_trainings',
+    db.Column('plan_id', db.Integer, db.ForeignKey('plans.id', ondelete='CASCADE'), primary_key=True),
+    db.Column('training_id', db.Integer, db.ForeignKey('trainings.training_id', ondelete='CASCADE'), primary_key=True)
+)
+
+
+class User(db.Model):
+    __tablename__ = 'users'
+
+    id = db.Column(db.Integer, primary_key=True)
+    name = db.Column(db.String(50), nullable=False, unique=True)
+    email = db.Column(db.String(50), nullable=False, unique=True)
+    level = db.Column(db.Integer, default=0)
+
+    trainings = relationship('UserTraining', back_populates='user')
+
+    def __repr__(self):
+        return f'User {self.id}'
+
+
+class UserTraining(db.Model):
+    __tablename__ = 'user_trainings'
+
+    id = Column(Integer, primary_key=True)
+    user_id = Column(Integer, ForeignKey('users.id'))
+    training_id = Column(Integer, ForeignKey('trainings.training_id'))
+    assigned = Column(db.Boolean, default=False)
+    completed = Column(db.Boolean, default=False)
+    date_created = Column(db.DateTime, default=datetime.utcnow)
+    date_completed = Column(db.DateTime)
+
+    user = relationship('User', back_populates='trainings')
+    training = relationship('Training', back_populates='user_trainings')
+    training_exercises = relationship('UserTrainingExercise', back_populates='user_training')
+
+
+
+class UserTrainingExercise(db.Model):
+    __tablename__ = 'user_training_exercises'
+    id = Column(Integer, primary_key=True)
+    user_training_id = Column(Integer, ForeignKey('user_trainings.id'))
+    exercise_id = Column(Integer, ForeignKey('exercises.exercise_id'))
+    sets = Column(Integer)
+    repetitions = Column(Integer)
+    weight = Column(Integer)
+
+    user_training = relationship('UserTraining', back_populates='training_exercises')
+    exercise = relationship('Exercise', back_populates='user_training_exercises')
 
 
 if __name__ == '__main__':

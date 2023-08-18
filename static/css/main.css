@@ -14,15 +14,19 @@ body {
     background-color: rgba(0, 0, 0, 0.2); /* Прозрачный цвет фона */
 }
 
+.bg-opacity-60 {
+    background-color: rgba(0, 0, 0, 0.6); /* Прозрачный цвет фона */
+}
+
 .bg-opacity-0 {
     background-color: rgba(0, 0, 0, 0); /* Прозрачный цвет фона */
     transition: background-color 0.3s; /* Добавим плавный переход для hover */
 }
 
 .bg-opacity-0:hover {
-    background-color: rgba(0, 0, 0, 0.2); /* Полупрозрачный черный цвет фона при hover */
+
 }
 
 .nav-link.active {
-    font-weight: bold; /* Жирный текст */
+    background-color: rgba(0, 0, 0, 0.2);
 }

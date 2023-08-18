@@ -431,15 +431,24 @@ def plans_all():
     plan_trainings = Plan_Trainings.query.all()
     trains = Training.query.all()
 
-    plan = plans[0]
+    trainings_in_plan = {}  # {plan: [trains], ...}
 
-    # for plan_train in plan_trainings:
-    #     for train in trains:
-    #         if train.training_id == plan_train.train_id and plan_train.plan_id == plan.id:
-    #             print(train.name)
+    for plan in plans:
+        trainings_in_plan[plan] = []
+        print(f'-{plan.name}')
+        for plan_train in plan_trainings:
 
+            for train in trains:
+                if train.training_id == plan_train.training_id and plan_train.plan_id == plan.id:
 
-    return render_template('plans_all.html', plans=plans, trains=trains,plan_trainings=plan_trainings)
+                    train_time = 0
+                    for exercise in train.exercises:
+                        te = TrainingExercise.query.filter_by(training_id=train.training_id, exercise_id=exercise.exercise_id).first()
+                        train_time += te.sets * exercise.time_per_set
+
+                    trainings_in_plan[plan].append([train, train_time])
+
+    return render_template('plans_all.html', trainings_in_plan=trainings_in_plan)
 
 
 @app.route('/plan_new/<int:plan_id>', methods=['POST', 'GET'])

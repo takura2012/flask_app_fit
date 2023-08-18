@@ -5,7 +5,6 @@
 
 {% block body %}
 <h1>Тренировочные планы</h1>
-<h3>Сделать страницу и роут для просмотра плана ("подробнее")</h3>
 
 <form action="/plan_new/0" method="post">
     <div class="row mb-3">
@@ -22,39 +21,46 @@
 
 <hr>
 <div class="row">
-    <div class="col-6">
-        <h5>Планы:</h5>
+    <div class="col-5">
+    </div>
+    <div class="col-7">
+    </div>
+</div>
+<div class="row">
+    <div class="col-5">
+
         <div class="list-group" id="list-tab" role="tablist">
-        {% for plan in plans %}
-          <a class="nav-link {% if loop.index == 1 %} active {% endif %} link-underline link-underline-opacity-0 bg-opacity-0" data-bs-toggle="list" href="#plan{{plan.id}}" role="tab">{{plan.name}}</a>
+        {% for plan, trains in trainings_in_plan.items() %}
+          <a class="nav-link {% if loop.index == 1 %} active {% endif %} link-underline link-underline-opacity-0 bg-opacity-0 fs-4" data-bs-toggle="list" href="#plan{{plan.id}}" role="tab">
+              {{plan.name}}
+          </a>
           {% endfor %}
         </div>
     </div>
 
 
-    <div class="col-6">
-
+    <div class="col-7">
 
 
         <div class="tab-content" id="nav-tabContent">
-          {% for plan in plans %}
-            <div class="tab-pane fade {% if loop.index == 1 %} show active {% endif %}" id="plan{{plan.id}}" role="tabpanel" >
+          {% for plan, trains in trainings_in_plan.items() %}
+            <div class="tab-pane fade {% if loop.index == 1 %} show active {% endif %} border rounded-4 bg-opacity-60 p-3" id="plan{{plan.id}}" role="tabpanel" >
+                <div class="container text-light">
                 <h4>{{plan.name}}</h4>
-                {% for plan_train in plan_trainings %}
-                        {% for train in trains %}
-                            {% if train.training_id == plan_train.training_id and plan_train.plan_id == plan.id %}
-                                {{train.name}} <br>
-                            {% endif %}
-                        {% endfor %}
-                {% endfor %}
+                    </div>
 
+                {% for i in range(trains|length) %}
+                <div class="container mb-2 text-light">
+                    <b>День {{i+1}}: </b> {{trains[i][0].name}} ({{ trains[i][1] }} минут)
+                </div>
+                {% endfor %}
                 <hr>
                 <div class="row">
                     <div class="col-8">
-                        <a href="#" class="btn btn-outline-success btn-sm">Назначить</a>
+                        <a href="#" class="btn btn-success btn-sm">Назначить</a>
                     </div>
                     <div class="col-4">
-                        <a href="/plan_new/{{plan.id}}" class="btn btn-outline-primary btn-sm">Редактировать</a>
+                        <a href="/plan_new/{{plan.id}}" class="btn btn-primary btn-sm">Редактировать</a>
                     </div>
                 </div>
 

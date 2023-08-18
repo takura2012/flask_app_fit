@@ -4,7 +4,7 @@ from flask_sqlalchemy import SQLAlchemy
 import json
 import config
 from _models import Exercise, Muscle, ExerciseMuscle, db, User, Plan, TrainingExercise, \
-    Training, UserTraining, UserTrainingExercise, plan_trainings
+    Training, UserTraining, UserTrainingExercise, Plan_Trainings
 from sqlalchemy import Column, Integer, String, ForeignKey, and_, or_
 from sqlalchemy.orm import relationship
 from datetime import datetime
@@ -426,13 +426,24 @@ def exercise_filter_list():
 @app.route('/plans_all', methods=['POST', 'GET'])
 def plans_all():
 
+#   тут нужно будет фильтровать по юзеру для уменьшения трафика
     plans = Plan.query.all()
+    plan_trainings = Plan_Trainings.query.all()
+    trains = Training.query.all()
 
-    return render_template('plans_all.html', plans=plans)
+    plan = plans[0]
+
+    # for plan_train in plan_trainings:
+    #     for train in trains:
+    #         if train.training_id == plan_train.train_id and plan_train.plan_id == plan.id:
+    #             print(train.name)
 
 
-@app.route('/plan_new', methods=['POST', 'GET'])
-def plans_new():
+    return render_template('plans_all.html', plans=plans, trains=trains,plan_trainings=plan_trainings)
+
+
+@app.route('/plan_new/<int:plan_id>', methods=['POST', 'GET'])
+def plan_new(plan_id):
     trainings = Training.query.all()
 
     # for train in trainings:
@@ -441,7 +452,7 @@ def plans_new():
     #             if training_exercise.training_id == train.training_id:
     #                 print(f'{ex.name} {training_exercise.sets}x{training_exercise.repetitions}')
 
-    if request.method == 'POST':
+    if request.method == 'POST' and plan_id == 0:
         plan_name = request.form.get('plan_name')
 
         unique_name = generate_unique_plan_name(plan_name)
@@ -455,8 +466,44 @@ def plans_new():
             db.session.rollback()
             return 'Ошибка при создании нового плана тренировок'
 
-    return render_template('plan_new.html', trainings=trainings, plan=plan)
+    else:
+        plan = Plan.query.get(plan_id)
 
+    plan_trainings = Plan_Trainings.query.filter_by(plan_id=plan.id).all()
+
+    # for plan_train in plan_trainings:
+    #     for train in trainings:
+    #         if train.training_id == plan_train.training_id:
+    #             print(train.name)
+
+    return render_template('plan_new.html', trainings=trainings, plan=plan, plan_trainings=plan_trainings)
+
+
+@app.route('/plan_add_train', methods=['POST', 'GET'])
+def plan_add_train():
+    if request.method == 'POST':
+        plan_id = request.form.get('plan_id_hidden')
+        train_id = request.form.get('train_id_hidden')
+        plan = Plan.query.get(plan_id)
+        train = Training.query.get(train_id)
+
+        # plan.trainings.append(train)
+
+        # для дубликатов:
+        PT = Plan_Trainings(plan_id=plan_id, training_id=train_id)
+
+        try:
+            db.session.add(PT)
+            db.session.commit()
+        except Exception as e:
+            db.session.rollback()
+            return f'Ошибка: не удалось записать в базу добавленные тренировки ---- {e}'
+
+        # plan_trainings = Plan_Trainings.query.filter_by(plan_id=plan.id).all()
+        # for plan_train in plan_trainings:
+        #     print(plan_train.plan_id, plan_train.training_id)
+
+    return redirect(url_for('plan_new', plan_id=plan_id))
 # ------------------------------------------------LOGIC----------------------------------------------------------------
 @app.route('/logic', methods=['POST', 'GET'])
 def logic():

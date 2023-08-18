@@ -5,8 +5,9 @@
 
 {% block body %}
 <h1>Тренировочные планы</h1>
+<h3>Сделать страницу и роут для просмотра плана ("подробнее")</h3>
 
-<form action="/plan_new" method="post">
+<form action="/plan_new/0" method="post">
     <div class="row mb-3">
         <div class="col-6">
             <input type="text" name="plan_name" id="plan_name" class="form-control" placeholder="Название нового плана (например: 3 дня, новичок, фулбоди)" required>
@@ -22,7 +23,7 @@
 <hr>
 <div class="row">
     <div class="col-6">
-        <h5>Список тренировочных планов пользователя (для редактирования удаления просмотра и назначения)</h5>
+        <h5>Планы:</h5>
         <div class="list-group" id="list-tab" role="tablist">
         {% for plan in plans %}
           <a class="nav-link {% if loop.index == 1 %} active {% endif %} link-underline link-underline-opacity-0 bg-opacity-0" data-bs-toggle="list" href="#plan{{plan.id}}" role="tab">{{plan.name}}</a>
@@ -37,7 +38,29 @@
 
         <div class="tab-content" id="nav-tabContent">
           {% for plan in plans %}
-            <div class="tab-pane fade {% if loop.index == 1 %} show active {% endif %}" id="plan{{plan.id}}" role="tabpanel" >{{plan.name}}</div>
+            <div class="tab-pane fade {% if loop.index == 1 %} show active {% endif %}" id="plan{{plan.id}}" role="tabpanel" >
+                <h4>{{plan.name}}</h4>
+                {% for plan_train in plan_trainings %}
+                        {% for train in trains %}
+                            {% if train.training_id == plan_train.training_id and plan_train.plan_id == plan.id %}
+                                {{train.name}} <br>
+                            {% endif %}
+                        {% endfor %}
+                {% endfor %}
+
+                <hr>
+                <div class="row">
+                    <div class="col-8">
+                        <a href="#" class="btn btn-outline-success btn-sm">Назначить</a>
+                    </div>
+                    <div class="col-4">
+                        <a href="/plan_new/{{plan.id}}" class="btn btn-outline-primary btn-sm">Редактировать</a>
+                    </div>
+                </div>
+
+
+
+            </div>
           {% endfor %}
         </div>
     </div>
@@ -47,3 +70,6 @@
 
 
 {% endblock %}
+
+
+

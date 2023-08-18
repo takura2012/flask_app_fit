@@ -6,6 +6,7 @@ from datetime import datetime
 
 db = SQLAlchemy()
 
+
 class Exercise(db.Model):
     __tablename__ = 'exercises'
 
@@ -16,13 +17,12 @@ class Exercise(db.Model):
     difficulty = db.Column(db.Integer, nullable=False)
     time_per_set = db.Column(db.Integer, nullable=False)
     counter = db.Column(db.Integer, default=0)
-    filters = db.Column(JSON, default=[])   # LOCATION_FILTERS.keys
+    filters = db.Column(JSON, default=[])  # LOCATION_FILTERS.keys
 
     user_training_exercises = relationship('UserTrainingExercise', back_populates='exercise')
     muscles = relationship('Muscle', secondary='exercise_muscles')
     training = db.relationship('Training', secondary='training_exercises', overlaps="exercises")
     training_exercises = relationship('TrainingExercise', back_populates='exercise')
-
 
     def __repr__(self):
         return 'Exercise %r' % self.exercise_id
@@ -106,10 +106,13 @@ class Plan(db.Model):
     trainings = relationship('Training', secondary='plan_trainings', back_populates='plans')
 
 
-plan_trainings = db.Table('plan_trainings',
-    db.Column('plan_id', db.Integer, db.ForeignKey('plans.id', ondelete='CASCADE'), primary_key=True),
-    db.Column('training_id', db.Integer, db.ForeignKey('trainings.training_id', ondelete='CASCADE'), primary_key=True)
-)
+class Plan_Trainings(db.Model):
+    __tablename__ = 'plan_trainings'
+
+    id = db.Column(db.Integer, primary_key=True)
+    plan_id = db.Column(db.Integer, db.ForeignKey('plans.id', ondelete='CASCADE'))
+    training_id = db.Column(db.Integer,db.ForeignKey('trainings.training_id', ondelete='CASCADE'))
+
 
 
 class User(db.Model):
@@ -140,7 +143,6 @@ class UserTraining(db.Model):
     user = relationship('User', back_populates='trainings')
     training = relationship('Training', back_populates='user_trainings')
     training_exercises = relationship('UserTrainingExercise', back_populates='user_training')
-
 
 
 class UserTrainingExercise(db.Model):

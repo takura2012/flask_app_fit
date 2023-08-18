@@ -5,22 +5,55 @@
 
 {% block body %}
 
+<div class="row">
+    <div class="col-10">
+        <h3>{{plan.name}}</h3>
+    </div>
+    <div class="col-2">
+        <a href="#" class="btn btn-danger">Удалить план</a>
+    </div>
+</div>
+<hr>
 
 
-        <h1>{{plan.name}}</h1>
 
 
 
 <div class="row">
     <div class="col-6">
-        Тренировки в плане
+        <div class="container mb-3 text-center">
+            <b>Тренировки в плане</b>
+        </div>
+
+        {% for i in range(plan_trainings|length) %}
+            {% for train in plan.trainings %}
+                {% if train.training_id == plan_trainings[i].training_id %}
+                    <div class="row mb-3">
+                        <div class="col-9">
+                            <b>День {{i+1}}:</b> {{ train.name }}
+                        </div>
+                        <div class="col-3">
+                            <a href="#{{plan_trainings[i].id}}" class="btn btn-outline-danger btn-sm">Убрать</a>
+                        </div>
+                    </div>
+                {% endif %}
+            {% endfor %}
+        {% endfor %}
     </div>
     <div class="col-6">
+        <div class="container mb-3 text-center">
+            <b>Все тренировки</b>
+        </div>
+
+
         <ul class="nav flex-column mb-0">
             {% for train in trainings %}
             <li class="mb-0">
                 <a href="#" class="nav-link link-underline link-underline-opacity-0 bg-opacity-0" data-bs-toggle="modal" data-bs-target="#modal_training_to_plan{{train.training_id}}">{{train.name}}</a>
-                {% include "modal_training_to_plan.html" %}
+                <form action="/plan_add_train" method="post">
+                    {% include "modal_training_to_plan.html" %}
+                </form>
+
             </li>
             {% endfor %}
         </ul>

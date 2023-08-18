@@ -15,7 +15,8 @@
                         {% endif %}
                     {% endfor %}
                 {% endfor %}
-
+                <input type="hidden" id="train_id_hidden" name="train_id_hidden" value="{{train.training_id}}">
+                <input type="hidden" id="plan_id_hidden" name="plan_id_hidden" value="{{plan.id}}">
             </div>
             <div class="modal-footer">
                 <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Отмена</button>

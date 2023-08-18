@@ -22,3 +22,7 @@ body {
 .bg-opacity-0:hover {
     background-color: rgba(0, 0, 0, 0.2); /* Полупрозрачный черный цвет фона при hover */
 }
+
+.nav-link.active {
+    font-weight: bold; /* Жирный текст */
+}

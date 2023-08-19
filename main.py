@@ -435,7 +435,6 @@ def plans_all():
 
     for plan in plans:
         trainings_in_plan[plan] = []
-        print(f'-{plan.name}')
         for plan_train in plan_trainings:
 
             for train in trains:
@@ -455,11 +454,6 @@ def plans_all():
 def plan_new(plan_id):
     trainings = Training.query.all()
 
-    # for train in trainings:
-    #     for ex in train.exercises:
-    #         for training_exercise in ex.training_exercises:
-    #             if training_exercise.training_id == train.training_id:
-    #                 print(f'{ex.name} {training_exercise.sets}x{training_exercise.repetitions}')
 
     if request.method == 'POST' and plan_id == 0:
         plan_name = request.form.get('plan_name')
@@ -474,18 +468,56 @@ def plan_new(plan_id):
         except:
             db.session.rollback()
             return 'Ошибка при создании нового плана тренировок'
-
     else:
         plan = Plan.query.get(plan_id)
 
     plan_trainings = Plan_Trainings.query.filter_by(plan_id=plan.id).all()
 
-    # for plan_train in plan_trainings:
-    #     for train in trainings:
-    #         if train.training_id == plan_train.training_id:
-    #             print(train.name)
 
     return render_template('plan_new.html', trainings=trainings, plan=plan, plan_trainings=plan_trainings)
+
+
+@app.route('/plan_rename', methods=['POST', 'GET'])
+def plan_rename():
+
+    if request.method == 'POST':
+
+        plan_id = request.form.get('plan_id')
+        plan_new_name = request.form.get('plan_new_name')
+        plan = Plan.query.get(plan_id)
+        plan_new_name = generate_unique_plan_name(plan_new_name)
+
+        plan.name = plan_new_name
+
+        try:
+            db.session.commit()
+        except:
+            db.session.rollback()
+            return 'Ошибка : не удалось сохранить в базу новое имя плана'
+
+    return redirect(url_for('plan_new', plan_id=plan_id))
+
+
+@app.route('/plan_delete/<int:plan_id>')
+def plan_delete(plan_id):
+
+    plan = Plan.query.get(plan_id)
+    plan_trainings = Plan_Trainings.query.filter_by(plan_id=plan_id).all()
+    for plan_training in plan_trainings:
+        db.session.delete(plan_training)
+
+    try:
+        db.session.commit()
+    except Exception as e:
+        return f'Ошибка: не удалось удалить связи план-тренировки : {e}'
+
+    db.session.delete(plan)
+    try:
+        db.session.commit()
+    except:
+        return f'Ошибка: не удалось удалить план после удаления связей : {e}'
+
+    return redirect(url_for('plans_all'))
 
 
 @app.route('/plan_add_train', methods=['POST', 'GET'])
@@ -511,6 +543,22 @@ def plan_add_train():
         # plan_trainings = Plan_Trainings.query.filter_by(plan_id=plan.id).all()
         # for plan_train in plan_trainings:
         #     print(plan_train.plan_id, plan_train.training_id)
+
+    return redirect(url_for('plan_new', plan_id=plan_id))
+
+
+@app.route('/del_train_from_plan/<int:plan_trainings_id>')
+def del_train_from_plan(plan_trainings_id):
+
+    plan_training = Plan_Trainings.query.get(plan_trainings_id)
+    plan_id = plan_training.plan_id
+    db.session.delete(plan_training)
+
+    try:
+        db.session.commit()
+    except:
+        db.session.rollback()
+        return 'Ошибка: не удалось удалить связь плана и тренировки'
 
     return redirect(url_for('plan_new', plan_id=plan_id))
 # ------------------------------------------------LOGIC----------------------------------------------------------------

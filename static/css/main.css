@@ -27,6 +27,14 @@ body {
 
 }
 
+.dark-hover {
+
+}
+
+.dark-hover:hover {
+    background-color: rgba(0, 0, 80, 0.2);
+}
+
 .nav-link.active {
     background-color: rgba(0, 0, 0, 0.2);
 }

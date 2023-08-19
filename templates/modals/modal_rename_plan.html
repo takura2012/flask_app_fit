@@ -1,0 +1,25 @@
+<div class="modal fade" id="rename_plan" tabindex="-1" aria-labelledby="rename_planLabel" aria-hidden="true">
+    <div class="modal-dialog modal-dialog-centered">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h3 class="modal-title" id="rename_planLabel">Переименовать план</h3>
+                <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+            </div>
+            <div class="modal-body alert alert-secondary">
+                <div class="container">
+                    Переименовать : <b>{{plan.name}}</b> ?
+                </div>
+                <div class="container">
+                    <input type="text" name="plan_new_name" class="form-control" required placeholder="Новое название плана">
+                    <input type="hidden" name="plan_id" value="{{plan.id}}">
+                </div>
+
+
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Отмена</button>
+                <input type="submit" class="btn btn-success" value="Подтвердить">
+            </div>
+        </div>
+    </div>
+</div>

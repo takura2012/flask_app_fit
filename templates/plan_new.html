@@ -53,7 +53,7 @@
                 <div class="container mb-2 dark-hover fs-5 text-primary-emphasis">
                     <a href="#" class="nav-link link-underline link-underline-opacity-0 bg-opacity-0" data-bs-toggle="modal" data-bs-target="#modal_training_to_plan{{train.training_id}}">{{train.name}}</a>
                     <form action="/plan_add_train" method="post">
-                        {% include "modal_training_to_plan.html" %}
+                        {% include "/modals/modal_training_to_plan.html" %}
                     </form>
                 </div>
             {% endfor %}

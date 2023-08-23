@@ -38,3 +38,24 @@ body {
 .nav-link.active {
     background-color: rgba(0, 0, 0, 0.2);
 }
+
+.center-block {
+    display: flex;
+    justify-content: center;
+    /* align-items: center; */
+    /* min-height: 100vh;  Чтобы блок был посередине по вертикали на всю высоту экрана */
+}
+
+.content {
+    padding: 20px;
+    border: 1px solid #ccc;
+    border-radius: 10px;
+    background-color: white;
+    box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+    max-width: 600px;
+    width: 100%;
+}
+
+.text-dark-red {
+    color: rgb(128,0,0);
+}

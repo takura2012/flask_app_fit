@@ -13,15 +13,24 @@
 
 <body>
     <div class="container text-primary bg-opacity-20 rounded-2">
-        <header class="d-flex flex-wrap justify-content-center py-3 mb-2 fs-5 fw-semibold" >
-            <ul class="nav nav-pills ">
+        <header class="d-flex py-3 mb-2 fs-5 fw-semibold" >
+            <ul class="nav nav-pills flex-grow-1 justify-content-center">
                 <li class="nav-item"><a href="/" class="fs-5 fw-semibold btn">Главная</a></li>
                 <li class="nav-item"><a href="/users_center" class="fs-5 fw-semibold btn">Пользователь</a></li>
                 <li class="nav-item"><a href="/new_train" class="fs-5 fw-semibold btn">Тренировки</a></li>
                 <li class="nav-item"><a href="/plans_all" class="fs-5 fw-semibold btn">Планы</a></li>
                 <li class="nav-item"><a href="/migration" class="fs-5 fw-semibold btn">База</a></li>
             </ul>
+            <div class="fs-6 text-start text-dark">
+                {% if current_user %}
+                    {{current_user.name}} <br>
+                    {{current_user.email}} <br>
+                {% else %}
+                    <span class="fs-5 text-dark-red fw-semibold">Нужен залогин</span>
+                {% endif %}
+            </div>
         </header>
+
     </div>
     <div class="container">
         {% block body %}{% endblock %}

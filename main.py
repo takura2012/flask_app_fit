@@ -635,79 +635,46 @@ def migration_new():
 @app.route('/users_center', methods=['POST', 'GET'])
 def users_center():
 
+    current_user_name = session.get('current_user_name', 'Guest')
 
-    user = User.query.filter_by(name='Admin').first()
-    if not user:
-        user = User(
-            name = 'Admin',
-            email = 'takura2012@gmail.com'
-            )
-        db.session.add(user)
-        db.session.commit()
+    current_user = User.query.filter_by(name=current_user_name).first()
 
-    # добавление всех связей для пользователя
-    if False:
-        # Получаем тренировки, которые хотим назначить пользователю
-        training_ids_to_assign = [2, 3]  # ID тренировок, которые хотим назначить
-        trainings_to_assign = Training.query.filter(Training.training_id.in_(training_ids_to_assign)).all()
+    if not current_user:
+        return render_template('users_center.html')
 
-        # Создаем объекты UserTraining для каждой тренировки и добавляем их в список
-        user_trainings_to_assign = []
-        for training in trainings_to_assign:
-            user_training = UserTraining(
-                user=user,
-                training=training,
-                assigned=True  # Устанавливаем флаг, что тренировка назначена
-            )
-            user_trainings_to_assign.append(user_training)
+    all_user_trains = get_user_trains(current_user)
+    current_train = get_user_assigned_train(current_user)
 
-        # Добавляем список объектов UserTraining в сессию и коммитим изменения
-        db.session.add_all(user_trainings_to_assign)
-        db.session.commit()
+    if not current_train:
+        return render_template('users_center.html', current_user=current_user)
 
-        # Получаем тренировки, для которых нужно создать UserTrainingExercise
-        trainings_to_assign = Training.query.filter(Training.training_id.in_(training_ids_to_assign)).all()
-
-        # Создаем объекты UserTrainingExercise для каждой тренировки и упражнения
-        for user_training in user.trainings:
-            for training_exercise in user_training.training.exercises:
-                training_exercise_in_db = TrainingExercise.query.filter_by(training_id=user_training.training_id,
-                                                                           exercise_id=training_exercise.exercise_id).first()
-                user_training_exercise = UserTrainingExercise(
-                    user_training=user_training,
-                    exercise=training_exercise,
-                    sets=training_exercise_in_db.sets,
-                    repetitions=training_exercise_in_db.repetitions,
-                    weight=0  # Ваше значение веса
-                )
-                db.session.add(user_training_exercise)
-
-        # Добавление изменений в базу данных
-        db.session.commit()
-
-
-    # вывод от пользователя всех его объектов
-    if False:
-        user_trainings = user.trainings
-        # список объектов UserTraining из за trainings = relationship('UserTraining', back_populates='user') в классе User
-        for user_train in user_trainings:
-            print(user_train.training)
-            for ex in user_train.training.exercises:
-                print(ex)
-                for user_training_exercise in ex.user_training_exercises:
-                    print(user_training_exercise.sets, user_training_exercise.repetitions)
-
-
-
-    return render_template('users_center.html', user=user)
+    current_train_exlist = []
+    for exercise in current_train.exercises:
+        user_train = UserTraining.query.filter_by(user_id=current_user.id,
+                                                  training_id=current_train.training_id,
+                                                  assigned=True,
+                                                  completed=False
+                                                  ).first()
+        user_training_exercise = UserTrainingExercise.query.filter_by(user_training_id=user_train.id,
+                                                                      exercise_id=exercise.exercise_id
+                                                                      ).first()
+        current_train_exlist.append([exercise.name, user_training_exercise.sets, user_training_exercise.repetitions, user_training_exercise.weight])
+    print(f'current_user = {current_user}')
+    return render_template('users_center.html', current_user=current_user, current_train=current_train, current_train_exlist=current_train_exlist)
 
 
 @app.route('/assign_training/<int:plan_id>')
 def assign_training(plan_id):
 
+    current_user = User.query.filter_by(name='Admin').first()
+    session['current_user_name'] = current_user.name
 
+    del_current_user_plan(current_user)
 
-    return render_template('user_trainings.html')
+    if not assign_plan_to_user(current_user, plan_id):
+        return 'Ошибка assign_plan_to_user'
+
+    return redirect(url_for('users_center'))
 
 if __name__ == '__main__':
     app.run(debug=True)

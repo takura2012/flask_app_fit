@@ -1,14 +1,10 @@
 # Создайте структуру данных, чтобы хранить информацию об упражнениях, мышцах и нагрузке.
 # Загрузите данные из вашей базы данных в эту структуру
 import random, config
-from _models import Exercise, Muscle, Training, ExerciseMuscle, TrainingExercise, Plan
+from _models import Exercise, Muscle, Training, ExerciseMuscle, TrainingExercise, Plan, UserTraining, UserTrainingExercise, Plan_Trainings
 from typing import List
 from sqlalchemy import or_
-
-
-# from main import app
-#
-# app.config.from_object('config')
+from main import db
 
 
 # функция вернет список объектов Exercise сумма difficulty у которых будет не превышать max_effort по жадному алгоритму (начиная с больших)
@@ -129,6 +125,7 @@ def generate_unique_plan_name(base_name):
 
     return name
 
+
 def generate_unique_train_name(base_name):
     name = base_name
     counter = 1
@@ -138,3 +135,83 @@ def generate_unique_train_name(base_name):
         counter += 1
 
     return name
+
+
+def assign_plan_to_user(user, plan_id):
+    # беру все связи план-тренировка для этого плана
+    plan_trainings = Plan_Trainings.query.filter_by(plan_id=plan_id).all()
+    # цикл по этим связям
+    for plan_train in plan_trainings:
+        # создаю связь user_training для пользователя с флагом assigned=True
+        user_training = UserTraining(user_id=user.id,
+                                     training_id=plan_train.training_id,
+                                     assigned=True
+                                     )
+        db.session.add(user_training)
+        try:
+            db.session.commit()
+        except Exception as e:
+            db.session.rollback()
+            return e
+
+    # беру из базы новосозданные user_trainings для этого юзера с флагом assigned=True
+    user_trainings = UserTraining.query.filter_by(user_id=user.id, assigned=True).all()
+
+    # далее создаю связи user_train_exercises , беру сеты и повторы с training_exercise
+    user_train_exercises = []
+    for user_training in user_trainings:
+        train = Training.query.get(user_training.training_id)
+        exercises = train.exercises
+        for exercise in exercises:
+            training_exercise = TrainingExercise.query.filter_by(training_id=train.training_id, exercise_id=exercise.exercise_id).first()
+            user_train_exercise = UserTrainingExercise(user_training_id=user_training.id,
+                                                        exercise_id=exercise.exercise_id,
+                                                        sets=training_exercise.sets,
+                                                        repetitions = training_exercise.repetitions,
+                                                        weight = 0
+                                                        )
+            user_train_exercises.append(user_train_exercise)
+
+        db.session.add_all(user_train_exercises)
+
+        try:
+            db.session.commit()
+        except Exception as e:
+            db.session.rollback()
+            return e
+
+
+    return True
+
+
+def del_current_user_plan(user):
+
+    user_trainings = UserTraining.query.filter_by(user_id=user.id, assigned=True, completed=False).all()
+    for user_training in user_trainings:
+        db.session.delete(user_training)
+
+    try:
+        db.session.commit()
+    except Exception as e:
+        db.session.rollback()
+        return e
+
+    return True
+
+
+def get_user_trains(user):
+
+    trains = UserTraining.query.filter_by(user_id=user.id).all()
+
+    return trains
+
+
+def get_user_assigned_train(user):
+
+    user_training = UserTraining.query.filter_by(user_id=user.id, assigned=True).first()
+    if not user_training:
+        return None
+
+    train = Training.query.filter_by(training_id=user_training.training_id).first()
+
+    return train

@@ -114,7 +114,6 @@ class Plan_Trainings(db.Model):
     training_id = db.Column(db.Integer,db.ForeignKey('trainings.training_id', ondelete='CASCADE'))
 
 
-
 class User(db.Model):
     __tablename__ = 'users'
 
@@ -142,20 +141,23 @@ class UserTraining(db.Model):
 
     user = relationship('User', back_populates='trainings')
     training = relationship('Training', back_populates='user_trainings')
-    training_exercises = relationship('UserTrainingExercise', back_populates='user_training')
+    training_exercises = relationship('UserTrainingExercise', back_populates='user_training', cascade='all, delete-orphan')
 
 
 class UserTrainingExercise(db.Model):
     __tablename__ = 'user_training_exercises'
     id = Column(Integer, primary_key=True)
-    user_training_id = Column(Integer, ForeignKey('user_trainings.id'))
-    exercise_id = Column(Integer, ForeignKey('exercises.exercise_id'))
+    user_training_id = Column(Integer, ForeignKey('user_trainings.id', ondelete='CASCADE'))
+    exercise_id = Column(Integer, ForeignKey('exercises.exercise_id', ondelete='CASCADE'))
     sets = Column(Integer)
     repetitions = Column(Integer)
     weight = Column(Integer)
 
     user_training = relationship('UserTraining', back_populates='training_exercises')
     exercise = relationship('Exercise', back_populates='user_training_exercises')
+
+
+
 
 
 if __name__ == '__main__':

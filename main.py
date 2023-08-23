@@ -650,6 +650,7 @@ def migration_new():
 @app.route('/users_center', methods=['POST', 'GET'])
 def users_center():
 
+
     user = User.query.filter_by(name='Admin').first()
     if not user:
         user = User(
@@ -715,6 +716,13 @@ def users_center():
 
     return render_template('users_center.html', user=user)
 
+
+@app.route('/assign_training/<int:plan_id>')
+def assign_training(plan_id):
+
+
+
+    return render_template('user_trainings.html')
 
 if __name__ == '__main__':
     app.run(debug=True)

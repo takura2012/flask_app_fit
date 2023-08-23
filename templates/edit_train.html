@@ -48,7 +48,7 @@
                 <div class="col-2">
                     <button type="button" class="btn btn-outline-primary btn-sm" data-bs-toggle="modal" data-bs-target="#confirmDelete{{ te_info[0].exercise_id }}">Редактировать</button>
                     <form action="/edit_exercise_in_train/{{train.training_id}}" method="post">
-                        {% include "modal_del_exercise_from_train.html" %}
+                        {% include "/modals/modal_del_exercise_from_train.html" %}
                     </form>
 
                 </div>
@@ -141,11 +141,11 @@
 
 <!-- Раздел Модал переименование -->
 <form action="/train_rename" method="post">
-    {% include "modal_rename_train.html" %}
+    {% include "/modals/modal_rename_train.html" %}
 </form>
 
 <form action="/train_delete" method="post">
-{% include "modal_del_training.html" %}
+{% include "/modals/modal_del_training.html" %}
 </form>
 
 

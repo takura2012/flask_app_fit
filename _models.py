@@ -11,11 +11,11 @@ class Exercise(db.Model):
     __tablename__ = 'exercises'
 
     exercise_id = db.Column(db.Integer, primary_key=True)
-    name = db.Column(db.String(50), nullable=False)
+    name = db.Column(db.String(50), default='New exercise')
     target = db.Column(db.String(20), default='')
-    description = db.Column(db.String(300), nullable=False)
-    difficulty = db.Column(db.Integer, nullable=False)
-    time_per_set = db.Column(db.Integer, nullable=False)
+    description = db.Column(db.String(300), default='')
+    difficulty = db.Column(db.Integer, default=1)
+    time_per_set = db.Column(db.Integer, default=1)
     counter = db.Column(db.Integer, default=0)
     filters = db.Column(JSON, default=[])  # LOCATION_FILTERS.keys
 

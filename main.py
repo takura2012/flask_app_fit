@@ -46,7 +46,7 @@ def usefilter():
 
     return redirect('index')
 
-# ------------------------------------------------LIST----------------------------------------------------------------
+# ------------------------------------------------BASE----------------------------------------------------------------
 
 @app.route('/list/<string:counters>/del', methods=['POST','GET'])
 def list_del(counters):
@@ -182,7 +182,7 @@ def create_exercises():
         target = request.form['select_target']
         description = request.form['description']
         difficulty = request.form['difficulty']
-        time_per_set = request.form['time_per_set']
+        time_per_set = int(request.form['time_per_set']) if request.form['time_per_set'] else 0
 
         for i in range(len(config_filters)):
             form_list = request.form.getlist('filters' + str(i + 1))
@@ -284,37 +284,22 @@ def edit_exercise_in_train(train_id):
 
 @app.route("/new_train", methods=['POST', 'GET'])
 def new_train():
-
+    trains_list = Training.query.all()
     if request.method == 'POST':
         train_name = request.form.get('train_name')
+        new_name = generate_unique_train_name(train_name)
 
-        train = Training.query.filter_by(name=train_name).first()
-
-        if train:
-            new_train = Training(name=train_name)
-            db.session.add(new_train)
-            try:
-                db.session.commit()
-                new_train.name = f"{train_name} ({new_train.training_id})"
-                db.session.commit()
-            except:
-                db.session.rollback()
-                return 'Ошибка при создании новой тренировки (не сохранились изменения в базе)'
-        else:
-            new_train = Training(name=train_name)
-            db.session.add(new_train)
-            try:
-                db.session.commit()
-            except:
-                db.session.rollback()
-                return 'Ошибка при создании новой тренировки (не сохранились изменения в базе)'
-
+        new_train = Training(name=new_name)
+        db.session.add(new_train)
+        try:
+            db.session.commit()
+        except:
+            db.session.rollback()
+            return 'Ошибка при создании новой тренировки (не сохранились изменения в базе)'
 
         session['train'] = new_train
 
         return redirect(url_for('edit_train', train_id=new_train.training_id))
-
-    trains_list = Training.query.all()
 
     return render_template('new_train.html', trains_list=trains_list)
 

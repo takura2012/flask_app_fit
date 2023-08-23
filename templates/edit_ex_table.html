@@ -37,9 +37,9 @@
             </select>
             <span>Описание:</span>
             <textarea name="description" id="description" class="form-control" rows="5">{{exercise.description}}</textarea><br>
-            <span>Сложность (выше 50 это основное):</span>
+            <span>Сложность (используется только в logic):</span>
             <input type="number" name="difficulty" id="difficulty" class="form-control" value="{{exercise.difficulty}}"><br>
-            <span>Время выполнения (минут):</span>
+            <span>Время на 1 подход с отдыхом (минут):</span>
             <input type="number" name="time_per_set" id="time_per_set" class="form-control" value="{{exercise.time_per_set}}"><br>
             <b>Фильтры:</b><br>
             {% for i in range(const_config['filter_list']|length) %}
@@ -91,7 +91,7 @@
 
     <form method="post" action="/list/ex{{exercise.counter}}/del">
         <!-- Модальное окно подтверждения удаления -->
-        {% include 'modal_del_exercise.html' %}
+        {% include '/modals/modal_del_exercise.html' %}
     </form>
 
 

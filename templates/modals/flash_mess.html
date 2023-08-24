@@ -1,0 +1,11 @@
+{% with messages = get_flashed_messages() %}
+        {% if messages %}
+
+                {% for message in messages %}
+                    <div class="d-inline-flex p-2 fs-5 custom-flash-warning rounded-3">
+                        {{ message }}
+                    </div>
+                {% endfor %}
+
+        {% endif %}
+{% endwith %}

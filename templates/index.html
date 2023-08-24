@@ -5,16 +5,36 @@
 
 {% block body %}
 
+{% include "/modals/flash_mess.html" %}
 
 
-{% with messages = get_flashed_messages() %}
-        {% if messages %}
-            <ul>
-                {% for message in messages %}
-                    <li>{{ message }}</li>
-                {% endfor %}
-            </ul>
+<div class="center-block mb-2">
+    <a href="/users_center" class="index-div fs-4 fw-semibold link-underline link-underline-opacity-0 position-relative">
+    Начать тренировку
+        {% if uncompleted_user_trainings|length >0 %}
+        <span class="position-absolute top-0 start-100 translate-middle badge rounded-pill bg-success">
+             {{ uncompleted_user_trainings|length }}
+        </span>
         {% endif %}
-    {% endwith %}
+    </a>
+
+</div>
+<div class="center-block mb-2">
+    <a href="/statistics" class="index-div fs-4 fw-semibold link-underline link-underline-opacity-0">
+    Статистика
+    </a>
+</div>
+<div class="center-block mb-2">
+    <a href="#" class="index-div fs-4 fw-semibold link-underline link-underline-opacity-0 ">
+    Управление
+
+    </a>
+</div>
+<div class="center-block mb-2">
+    <a href="#" class="index-div fs-4 fw-semibold link-underline link-underline-opacity-0">
+    Информация
+    </a>
+</div>
+
 
 {% endblock %}

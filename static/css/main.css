@@ -40,6 +40,7 @@ body {
 }
 
 .center-block {
+
     display: flex;
     justify-content: center;
     /* align-items: center; */
@@ -58,4 +59,33 @@ body {
 
 .text-dark-red {
     color: rgb(128,0,0);
+}
+
+.custom-flash-warning {
+       background-color: rgb(255,222,173);
+       border: 1px solid rgb(139,69,19);
+}
+
+.index-div {
+    display: flex;
+    justify-content: center;
+    padding: 30px;
+    border: 1px solid #ccc;
+    border-radius: 10px;
+    background-color: rgb(255,255,240);
+    box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+    max-width: 300px;
+    width: 100%;
+}
+
+.statistics-btn {
+    display: flex;
+    justify-content: center;
+    padding: 2px;
+    border: 1px solid #ccc;
+    border-radius: 5px;
+    background-color: rgb(255,255,240);
+    box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+    max-width: 150px;
+    width: 100%;
 }

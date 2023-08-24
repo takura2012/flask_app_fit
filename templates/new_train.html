@@ -18,13 +18,9 @@
 
     <h3>Тренировки в базе</h3>
     {% for train in trains_list %}
-    <div class="col-6">
+    <div class="col-12">
 
         <a href="/edit_train/{{train.training_id}}">{{train.name}}</a>
-
-    </div>
-
-    <div class="col-6">
 
     </div>
     {% endfor %}

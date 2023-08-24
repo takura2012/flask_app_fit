@@ -22,9 +22,18 @@ migrate = Migrate(app, db)
 @app.route('/index', methods=['POST', 'GET'])
 @app.route('/', methods=['POST', 'GET'])
 def index():
-    flash('Flash message: index is empty')
 
-    return render_template("index.html")
+    try:
+        current_user_name = session['current_user_name']
+        user = User.query.filter_by(name=current_user_name).first()
+        # flash(f'Пользователь в системе: {user.name}')
+    except:
+        flash('Пользователь не в системе')
+        return render_template("index.html")
+
+    uncompleted_user_trainings = UserTraining.query.filter_by(user_id=user.id, assigned=True, completed=False).all()
+
+    return render_template("index.html", uncompleted_user_trainings=uncompleted_user_trainings)
 
 
 @app.route('/usefilter', methods=['POST'])
@@ -659,7 +668,7 @@ def users_center():
                                                                       exercise_id=exercise.exercise_id
                                                                       ).first()
         current_train_exlist.append([exercise.name, user_training_exercise.sets, user_training_exercise.repetitions, user_training_exercise.weight])
-    print(f'current_user = {current_user}')
+    # print(f'current_user = {current_user}')
     return render_template('users_center.html', current_user=current_user, current_train=current_train, current_train_exlist=current_train_exlist)
 
 
@@ -674,7 +683,56 @@ def assign_training(plan_id):
     if not assign_plan_to_user(current_user, plan_id):
         return 'Ошибка assign_plan_to_user'
 
-    return redirect(url_for('users_center'))
+    return redirect(url_for('index'))
+
+
+@app.route('/user_complete_train/<int:train_id>')
+def user_complete_train(train_id):
+    try:
+        current_user_name = session['current_user_name']
+    except:
+        flash('Ошибка в определении пользователя (в сессии нет пользователя)')
+        return redirect(url_for('users_center'))
+    user = User.query.filter_by(name=current_user_name).first()
+
+    res = set_train_complete(user.id, train_id)
+    if res != 'OK':
+        flash('Ошибка при установке завершения тренировки (запись в базу)')
+        flash(res)
+
+    return redirect(url_for('index'))
+
+
+@app.route('/statistics')
+def statistics():
+
+    try:
+        current_user_name = session['current_user_name']
+        user = User.query.filter_by(name=current_user_name).first()
+    except:
+        flash('Пользователь не в системе')
+        return render_template("index.html")
+
+    u_utr = UserTraining.query.filter_by(user_id=user.id, assigned=True, completed=False).all()
+    c_utr = UserTraining.query.filter_by(user_id=user.id, assigned=True, completed=True).all()
+
+    uncompleted_trainings = []
+    for u_tr in u_utr:
+        train = Training.query.get(u_tr.training_id)
+        if train:
+            uncompleted_trainings.append(train)
+
+    completed_trainings = []
+    for c_tr in c_utr:
+        train = Training.query.get(c_tr.training_id)
+        if train:
+            completed_trainings.append(train)
+    completed_trainings.reverse()
+
+
+
+
+    return render_template('statistics.html', uncompleted_trainings=uncompleted_trainings, completed_trainings=completed_trainings)
 
 if __name__ == '__main__':
     app.run(debug=True)

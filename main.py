@@ -703,6 +703,69 @@ def user_complete_train(train_id):
     return redirect(url_for('index'))
 
 
+@app.route('/train_progress_start', methods=['POST', 'GET'])
+def train_progress_start():
+
+    if request.method == 'POST':
+        train_id = request.form.get('train_id')
+        user_id = request.form.get('user_id')
+
+        # нужно найти user-train-exercise
+        user_training = UserTraining.query.filter_by(user_id=user_id, training_id=train_id, assigned=True, completed=False).first()
+        user_training_exercise = UserTrainingExercise.query.filter_by(user_training_id=user_training.id, completed=False).first()
+
+        exercise = Exercise.query.get(user_training_exercise.exercise_id)
+
+    return render_template('current_exercise.html', exercise=exercise, user_training=user_training, user_training_exercise=user_training_exercise)
+
+
+@app.route('/train_progress_next', methods=['POST', 'GET'])
+def train_progress_next():
+
+    if request.method == 'POST':
+        user_training_exercise_id = request.form.get('user_training_exercise_id')
+        user_training_id = request.form.get('user_training_id')
+        user_training_exercise = UserTrainingExercise.query.get(user_training_exercise_id)
+        user_training_exercise.completed = True
+
+        try:
+            db.session.commit()
+        except:
+            db.session.rollback()
+            return 'Ошибка: не удалось записать в базу'
+
+        user_training = UserTraining.query.get(user_training_id)
+        train_id = user_training.training_id
+        user_id = user_training.user_id
+
+        user_training_exercises = UserTrainingExercise.query.filter_by(user_training_id=user_training_id, completed=False).first()
+        if not user_training_exercises:
+
+            set_train_complete(user_id, train_id)
+            user_training_exercises = UserTrainingExercise.query.filter_by(user_training_id=user_training_id).all()
+            finish_data = []
+            for ute in user_training_exercises:
+                ex = Exercise.query.get(ute.exercise_id) # для ссылки на статистику упражнений
+                ex_id = ex.exercise_id
+                ex_name = ex.name
+                ex_completed = ute.completed
+                weight = ute.weight
+                finish_data.append({'ex_id':ex_id, 'ex_name':ex_name, 'ex_completed':ex_completed, 'weight':weight})
+
+            print(finish_data)
+            return render_template('training_finished.html', finish_data=finish_data)
+
+        url = url_for('train_progress_start', _external=True)  # URL целевого роута
+        payload = {
+            'train_id': train_id,
+            'user_id': user_id
+        }
+
+    response = requests.post(url, data=payload)
+
+    return response.content
+
+
 @app.route('/statistics')
 def statistics():
 

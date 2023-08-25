@@ -136,7 +136,7 @@ class UserTraining(db.Model):
     training_id = Column(Integer, ForeignKey('trainings.training_id'))
     assigned = Column(db.Boolean, default=False)
     completed = Column(db.Boolean, default=False)
-    date_created = Column(db.DateTime, default=datetime.utcnow)
+    date_started = Column(db.DateTime)
     date_completed = Column(db.DateTime)
 
     user = relationship('User', back_populates='trainings')
@@ -152,6 +152,7 @@ class UserTrainingExercise(db.Model):
     sets = Column(Integer)
     repetitions = Column(Integer)
     weight = Column(Integer)
+    completed = Column(db.Boolean, default=False)
 
     user_training = relationship('UserTraining', back_populates='training_exercises')
     exercise = relationship('Exercise', back_populates='user_training_exercises')

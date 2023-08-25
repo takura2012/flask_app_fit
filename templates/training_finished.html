@@ -1,0 +1,15 @@
+{% extends 'base.html' %}
+{% block title %}
+Поздравляю!
+{% endblock %}
+
+{% block body %}
+<h4>Тренировка завершена!</h4>
+    <hr>
+Время выполнения: <br>
+{% for ex in finish_data %}
+id: {{ex.ex_id}}. <b>{{ex.ex_name}}</b> {% if ex.ex_completed %} <span class="text-success">Завершено</span> {% else %} <span class="text-danger">Не завершено</span> {% endif %}, Рабочий вес: {{ex.weight}}
+<br>
+{% endfor %}
+
+{% endblock %}

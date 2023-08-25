@@ -2,7 +2,7 @@
 # Загрузите данные из вашей базы данных в эту структуру
 import random, config
 from datetime import datetime
-
+import requests
 from _models import Exercise, Muscle, Training, ExerciseMuscle, TrainingExercise, Plan, UserTraining, UserTrainingExercise, Plan_Trainings
 from typing import List
 from sqlalchemy import or_
@@ -222,14 +222,18 @@ def get_user_assigned_train(user):
 def set_train_complete(user_id, train_id):
     # print(user_id, train_id)
     user_training = UserTraining.query.filter_by(user_id=user_id, training_id=train_id, completed=False).first()
-    user_training.completed = True
-    user_training.date_completed = datetime.utcnow()
+    if user_training:
+        user_training.completed = True
+        user_training.date_completed = datetime.utcnow()
 
-    try:
-        db.session.commit()
-    except Exception as e:
-        db.session.rollback()
-        print(e)
-        return e
+        try:
+            db.session.commit()
+        except Exception as e:
+            db.session.rollback()
+            print(e)
+            return e
 
     return 'OK'
+
+
+

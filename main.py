@@ -31,7 +31,10 @@ def index():
         flash('Пользователь не в системе')
         return render_template("index.html")
 
-    uncompleted_user_trainings = UserTraining.query.filter_by(user_id=user.id, assigned=True, completed=False).all()
+    try:
+        uncompleted_user_trainings = UserTraining.query.filter_by(user_id=user.id, assigned=True, completed=False).all()
+    except:
+        return render_template("index.html")
 
     return render_template("index.html", uncompleted_user_trainings=uncompleted_user_trainings)
 

@@ -19,8 +19,8 @@
         <h3>{{current_train.name}}</h3>
             <hr>
         {% for exercise in current_train_exlist %}
-                        <div class="container p-20 m-2 fs-5">
-                                {{ exercise[0] }}: {{ exercise[1] }}x{{exercise[2] }}
+                        <div class="container p-20 m-2 fs-5 {% if exercise[4] %} text-secondary {% else %} text-success-emphasis fw-bold {% endif %}">
+                                {{ exercise[0] }}: {{ exercise[1] }}x{{exercise[2] }} {% if exercise[4] %} <span class="fs-6"> (Завершено)</span> {% endif %}
                         </div>
                 {% endfor %}
         <hr>

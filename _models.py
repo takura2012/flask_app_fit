@@ -153,6 +153,7 @@ class UserTrainingExercise(db.Model):
     repetitions = Column(Integer)
     weight = Column(Integer)
     completed = Column(db.Boolean, default=False)
+    skipped = Column(db.Boolean, default=False)
 
     user_training = relationship('UserTraining', back_populates='training_exercises')
     exercise = relationship('Exercise', back_populates='user_training_exercises')

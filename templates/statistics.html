@@ -33,10 +33,10 @@
 {% for ut in uncompleted_trainings %}
 <div class="row mb-1 text-success fw-semibold">
 <div class="col-6">
-    {{ ut.name }}
+    {{ ut[0].name }}
 </div>
 <div class="col-2">
-дата
+
 </div>
     <div class="col">
 
@@ -49,10 +49,10 @@
 {% for ct in completed_trainings %}
 <div class="row mb-1 text-secondary fw-semibold">
 <div class="col-6">
-    {{ ct.name }}
+    {{ ct[0].name }}
 </div>
 <div class="col-2">
-дата
+    {{ct[3]}}
 </div>
     <div class="col-2">
 время
@@ -61,7 +61,7 @@
 </div>
 <div class="row mb-1 text-secondary">
     <div class="col">
-        Упражнений: 7 <a href="#" class="text-secondary">(просмотр)</a>
+        Упражнений: {{ct[2]}} <a href="/statistics/details/{{ct[1]}}" class="text-secondary">(просмотр)</a>
     </div>
 
 </div>

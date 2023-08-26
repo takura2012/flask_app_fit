@@ -8,7 +8,7 @@
     <hr>
 Время выполнения: <br>
 {% for ex in finish_data %}
-id: {{ex.ex_id}}. <b>{{ex.ex_name}}</b> {% if ex.ex_completed %} <span class="text-success">Завершено</span> {% else %} <span class="text-danger">Не завершено</span> {% endif %}, Рабочий вес: {{ex.weight}}
+{{loop.index}}. <b>{{ex.ex_name}}</b> {% if not ex.ex_skipped %} <span class="text-success">Завершено</span> {% else %} <span class="text-danger">Пропущено</span> {% endif %}, Рабочий вес: {{ex.weight}}
 <br>
 {% endfor %}
 

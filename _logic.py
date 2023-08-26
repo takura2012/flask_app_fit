@@ -157,7 +157,7 @@ def assign_plan_to_user(user, plan_id):
             return e
 
     # беру из базы новосозданные user_trainings для этого юзера с флагом assigned=True
-    user_trainings = UserTraining.query.filter_by(user_id=user.id, assigned=True).all()
+    user_trainings = UserTraining.query.filter_by(user_id=user.id, assigned=True, completed=False).all()
 
     # далее создаю связи user_train_exercises , беру сеты и повторы с training_exercise
     user_train_exercises = []
@@ -232,6 +232,21 @@ def set_train_complete(user_id, train_id):
             db.session.rollback()
             print(e)
             return e
+
+        user_training_exercises = UserTrainingExercise.query.filter_by(user_training_id=user_training.id, completed=False).all()
+        if not user_training_exercises:
+            return 'Не найдена связь user_training_exercises'
+
+        for user_training_exercise in user_training_exercises:
+            user_training_exercise.completed = True
+            user_training_exercise.skipped = True
+            try:
+                db.session.commit()
+            except Exception as e:
+                db.session.rollback()
+                print(e)
+                return e
+
 
     return 'OK'
 

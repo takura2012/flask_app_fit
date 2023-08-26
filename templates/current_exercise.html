@@ -19,7 +19,7 @@
 
                 <div class="col-6">
                     {% if exercise.target not in ['Кардио', 'Разминка', 'Пресс'] %}
-                        <input type="number" class="form-control" value="0">
+                        <input type="number" name="weight" class="form-control" value="0">
                     {% endif %}
                 </div>
 
@@ -42,7 +42,11 @@
                     <a href="/users_center" class="link-offset-1">Вернуться</a>
                 </div>
                 <div class="col">
-                    <a href="/users_center" class="link-offset-1">Пропустить</a>
+                    <form action="/train_progress_skip" id="tps_form" method="post">
+                        <a href="#" class="link-offset-1" onclick="document.getElementById('tps_form').submit(); return false;">Пропустить</a>
+                        <input type="hidden" name="user_training_id" value="{{user_training.id}}">
+                        <input type="hidden" name="user_training_exercise_id" value="{{user_training_exercise.id}}">
+                    </form>
                 </div>
             </div>
 

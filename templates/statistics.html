@@ -5,65 +5,52 @@
 
 {% block body %}
 {% include "/modals/flash_mess.html" %}
-
-<div class="statistics-btn d-inline-flex p-2 fw-bold fs-6">
+<form action="/statistics/exercises" method="post">
+<a href="/statistics" class="statistics-btn d-inline-flex p-2 fw-bold fs-6 link-underline link-underline-opacity-0">
     Тренировки ({{ completed_trainings|length + uncompleted_trainings|length }})
-</div>
-<div class="statistics-btn d-inline-flex p-2 fw-bold fs-6">
-    Упражнения
-</div>
-<div class="statistics-btn d-inline-flex p-2 fw-bold fs-6">
-    Прогресс весов
-</div>
-<hr>
-<div class="row mb-1 text-dark fw-bold">
-<div class="col-6">
-    Название
-</div>
-<div class="col-2">
-Дата:
-</div>
-    <div class="col-2">
-Время:
-    </div>
-    <div class="col"></div>
+</a>
 
-</div>
+    <input type="submit" class="statistics-btn d-inline-flex p-2 fw-bold text-primary fs-6 link-underline link-underline-opacity-0" value="Упражнения">
+    <input type="hidden" name="user_id" value="{{user.id}}">
+
+
+<a href="#" class="statistics-btn d-inline-flex p-2 fw-bold fs-6 link-underline link-underline-opacity-0">
+    Прогресс весов
+</a>
+</form>
+
 
 {% for ut in uncompleted_trainings %}
-<div class="row mb-1 text-success fw-semibold">
-<div class="col-6">
+<div class="row mt-3 text-success fw-semibold">
+<div class="col">
     {{ ut[0].name }}
 </div>
-<div class="col-2">
-
-</div>
-    <div class="col">
-
-    </div>
 
 </div>
 {% endfor %}
 <hr>
 
 {% for ct in completed_trainings %}
-<div class="row mb-1 text-secondary fw-semibold">
-<div class="col-6">
-    {{ ct[0].name }}
-</div>
-<div class="col-2">
-    {{ct[3]}}
-</div>
-    <div class="col-2">
-время
-    </div>
-    <div class="col"></div>
-</div>
-<div class="row mb-1 text-secondary">
-    <div class="col">
-        Упражнений: {{ct[2]}} <a href="/statistics/details/{{ct[1]}}" class="text-secondary">(просмотр)</a>
-    </div>
+<div class="container mb-2 background-custom-light rounded-3">
 
+
+    <div class="row mb-1 text-secondary fw-semibold">
+        <div class="col col-md-auto">
+            {{ct[3]}}
+        </div>
+        <div class="col">
+            {{ ct[0].name }}
+        </div>
+    </div>
+    <div class="row mb-1 text-secondary">
+        <div class="col">
+            Упражнений: {{ct[2]}} <a href="/statistics/details/{{ct[1]}}" >(просмотр)</a>
+        </div>
+
+        <div class="col">
+            <a href="/statistics/delete/{{ct[1]}}">Удалить</a>
+        </div>
+    </div>
 </div>
 {% endfor %}
 

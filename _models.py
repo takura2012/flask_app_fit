@@ -78,7 +78,7 @@ class Training(db.Model):
     name = db.Column(db.String(50), nullable=False)
 
     exercises = relationship('Exercise', secondary='training_exercises', overlaps="trainings")
-    user_trainings = relationship('UserTraining', back_populates='training')
+    user_trainings = relationship('UserTraining', back_populates='training', cascade='all, delete-orphan')
     plans = relationship('Plan', secondary='plan_trainings', back_populates='trainings')
 
     def __repr__(self):

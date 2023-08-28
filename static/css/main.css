@@ -102,3 +102,7 @@ body {
     min-height: 300px;
     width: 100%;
 }
+
+.background-custom-light {
+    background-color: rgba(240,255,240, 0.4);
+}

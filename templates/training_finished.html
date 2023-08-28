@@ -4,12 +4,40 @@
 {% endblock %}
 
 {% block body %}
-<h4>Тренировка завершена!</h4>
-    <hr>
-Время выполнения: <br>
+<div class="container text-center">
+<h3>Тренировка завершена!</h3>
+</div>
+
+<div class="row mb-0 fs-6">
+        <div class="col-8 mb-0 px-3 fs-5">
+           Упражнение
+        </div>
+
+        <div class="col mb-0 fw-semibold">
+            Выполнение
+        </div>
+        <div class="col mb-0 fw-semibold">
+            Рабочий вес
+        </div>
+</div>
+ <hr>
 {% for ex in finish_data %}
-{{loop.index}}. <b>{{ex.ex_name}}</b> {% if not ex.ex_skipped %} <span class="text-success">Завершено</span> {% else %} <span class="text-danger">Пропущено</span> {% endif %}, Рабочий вес: {{ex.weight}}
-<br>
+    <div class="row mb-0 fs-6">
+        <div class="col-8 mb-0 fs-5">
+            {{loop.index}}. <b>{{ex.ex_name}}</b>
+        </div>
+
+        <div class="col mb-0 fw-semibold">
+            {% if not ex.ex_skipped %} <span class="text-success">Завершено</span> {% else %} <span class="text-danger">Пропущено</span> {% endif %}
+        </div>
+        <div class="col mb-0 fw-semibold">
+            {% if ex.weight>0 %}
+                {{ex.weight}} кг
+            {% endif %}
+        </div>
+
+    </div>
+
 {% endfor %}
 
 {% endblock %}

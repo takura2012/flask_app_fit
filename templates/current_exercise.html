@@ -11,7 +11,7 @@
             <hr>
             {% if exercise.target not in ['Кардио', 'Разминка', 'Пресс'] %}
             <div class="row mx-2">
-                <span class="col-form-label">Рабочий вес</span>
+                <span class="col-form-label">Рабочий вес, кг (выполнялось ранее: {{previous_weight}} кг)</span>
             </div>
             {% endif %}
         <form action="/train_progress_next" method="post">
@@ -32,14 +32,10 @@
             <input type="hidden" name="user_training_exercise_id" value="{{user_training_exercise.id}}">
         </form>
 
-            <!--
-            <div class="center-block m-3">
-                <div class="image-placeholder justify-content-center align-items-center text-light">Тут будет картинка или описание</div>
-            </div>
-            -->
+
             <div class="row mt-4 mx-2">
                 <div class="col-3">
-                    <a href="/users_center" class="link-offset-1">Вернуться</a>
+                    <a href="/current_train" class="link-offset-1">Вернуться</a>
                 </div>
                 <div class="col">
                     <form action="/train_progress_skip" id="tps_form" method="post">

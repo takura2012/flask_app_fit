@@ -1,0 +1,16 @@
+{% extends 'base.html' %}
+{% block title %}
+Статистика
+{% endblock %}
+
+{% block body %}
+{% for ex_name, ex_data in exercises_struct.items() %}
+<div>
+    {{ex_name}} <br>
+    {% for data in ex_data %}
+        {{data.date}} {% if data.weight>0 %} {{data.weight}}кг {% endif %} {% if data.skipped %}, Пропущено {% endif %} <br>
+    {% endfor %}
+</div>
+{% endfor %}
+
+{% endblock %}

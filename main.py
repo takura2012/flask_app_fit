@@ -1,6 +1,7 @@
 from flask import Flask, render_template, url_for, request, redirect, session, flash
 from flask_migrate import Migrate
 from flask_sqlalchemy import SQLAlchemy
+from collections import Counter
 import json
 import config
 from _models import Exercise, Muscle, ExerciseMuscle, db, User, Plan, TrainingExercise, \
@@ -118,7 +119,7 @@ def list_edit(counters):
                 if any(sublist for sublist in form_list if sublist):
                     index_dict['filter_list'] += form_list
 
-            print(index_dict['filter_list'])
+            # print(index_dict['filter_list'])
 
             exercise.filters = index_dict['filter_list']
 
@@ -136,7 +137,7 @@ def list_edit(counters):
                     ExMus = ExerciseMuscle(exercise_id = exercise.exercise_id, muscle_id = muscle.muscle_id, percent = percent)
                     # добавляю его в список
                     exercise_muscles.append(ExMus)
-                    print(f'Упражнение id: {ExMus.exercise_id} - {muscle.muscle_name} (id:{ExMus.muscle_id}) - на {ExMus.percent}%')
+                    # print(f'Упражнение id: {ExMus.exercise_id} - {muscle.muscle_name} (id:{ExMus.muscle_id}) - на {ExMus.percent}%')
 
             try:
                 # сливаю список объектов ExerciseMuscle в базу, которая ранее была очищена
@@ -610,7 +611,7 @@ def logic_exclude(ex_id):
     selected_result = session.get('selected_result', [])
     max_effort = session.get('max_effort', [])
     targets_list = session.get('targets_list', [])
-    print(excluded)
+    # print(excluded)
     return redirect(url_for('logic'))
 
 
@@ -642,23 +643,23 @@ def migration_new():
         except Exception as e:
             return f'<h2>Ошибка: {str(e)}</h2>'
 
-# ------------------------------------------------USER----------------------------------------------------------------
+# ------------------------------------------------TRAINING-PROGRESS----------------------------------------------------------------
 
-@app.route('/users_center', methods=['POST', 'GET'])
-def users_center():
+@app.route('/current_train', methods=['POST', 'GET'])
+def current_train():
 
     current_user_name = session.get('current_user_name', 'Guest')
 
     current_user = User.query.filter_by(name=current_user_name).first()
 
     if not current_user:
-        return render_template('users_center.html')
+        return render_template('current_train.html')
 
     all_user_trains = get_user_trains(current_user)
     current_train = get_user_assigned_train(current_user)
 
     if not current_train:
-        return render_template('users_center.html', current_user=current_user)
+        return render_template('current_train.html', current_user=current_user)
 
     current_train_exlist = []
     for exercise in current_train.exercises:
@@ -672,7 +673,7 @@ def users_center():
                                                                       ).first()
         current_train_exlist.append([exercise.name, user_training_exercise.sets, user_training_exercise.repetitions, user_training_exercise.weight, user_training_exercise.completed])
 
-    return render_template('users_center.html', current_user=current_user, current_train=current_train, current_train_exlist=current_train_exlist)
+    return render_template('current_train.html', current_user=current_user, current_train=current_train, current_train_exlist=current_train_exlist)
 
 
 @app.route('/assign_training/<int:plan_id>')
@@ -695,7 +696,7 @@ def user_complete_train(train_id):
         current_user_name = session['current_user_name']
     except:
         flash('Ошибка в определении пользователя (в сессии нет пользователя)')
-        return redirect(url_for('users_center'))
+        return redirect(url_for('current_train'))
     user = User.query.filter_by(name=current_user_name).first()
 
     res = set_train_complete(user.id, train_id)
@@ -718,8 +719,9 @@ def train_progress_start():
         user_training_exercise = UserTrainingExercise.query.filter_by(user_training_id=user_training.id, completed=False).first()
 
         exercise = Exercise.query.get(user_training_exercise.exercise_id)
+        previous_weight = find_prev_weight(exercise.exercise_id, user_id)
 
-    return render_template('current_exercise.html', exercise=exercise, user_training=user_training, user_training_exercise=user_training_exercise)
+    return render_template('current_exercise.html', exercise=exercise, previous_weight=previous_weight, user_training=user_training, user_training_exercise=user_training_exercise)
 
 
 @app.route('/train_progress_next', methods=['POST', 'GET'])
@@ -829,7 +831,22 @@ def statistics():
 
 
 
-    return render_template('statistics.html', uncompleted_trainings=uncompleted_trainings, completed_trainings=completed_trainings)
+    return render_template('statistics.html', uncompleted_trainings=uncompleted_trainings, completed_trainings=completed_trainings, user=user)
+
+
+@app.route('/statistics/delete/<int:user_training_id>')
+def statistic_delete(user_training_id):
+
+    user_training = UserTraining.query.get(user_training_id)
+    db.session.delete(user_training)
+
+    try:
+        db.session.commit()
+    except:
+        db.session.rollback()
+        return 'Ошибка: не удалось удалить тренировку'
+
+    return redirect('/statistics')
 
 
 @app.route('/statistics/details/<int:user_training_id>')
@@ -845,8 +862,27 @@ def statistic_details(user_training_id):
         weight = ute.weight
         finish_data.append({'ex_id': ex_id, 'ex_name': ex_name, 'ex_skipped': ex_skipped, 'weight': weight})
 
-    print(finish_data)
+    # print(finish_data)
     return render_template('training_finished.html', finish_data=finish_data)
+
+
+@app.route('/statistics/exercises', methods=['POST', 'GET'])
+def statistics_exercises():
+
+    if request.method == 'POST':
+        # взял с формы ИД юзера
+        user_id = request.form.get('user_id')
+
+        # функция преобразует в словарь {ex_id:count_in, ...}
+        # counts = Counter(exercises)
+
+        # сортировка sorted(iterable, key=key, reverse=reverse) key это функция,
+        # lambda - анонимная название для элемента counts.items(), который передается в функцию
+        # sorted_counts = dict(sorted(counts.items(), key=lambda item: item[1], reverse=True))
+
+        exercises_struct = get_exercise_statistics(user_id)
+
+    return render_template('statistics_exercises.html', exercises_struct=exercises_struct)
 
 
 if __name__ == '__main__':

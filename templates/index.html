@@ -9,10 +9,10 @@
 
 
 <div class="center-block mb-2">
-    <a href="/users_center" class="index-div fs-4 fw-semibold link-underline link-underline-opacity-0 position-relative">
+    <a href="/current_train" class="index-div fs-4 fw-semibold link-underline link-underline-opacity-0 position-relative">
     Начать тренировку
         {% if uncompleted_user_trainings|length >0 %}
-        <span class="position-absolute top-0 start-100 translate-middle badge rounded-pill bg-success">
+        <span class="position-absolute top-0 start-100 translate-middle badge rounded-pill bg-success text-warning">
              {{ uncompleted_user_trainings|length }}
         </span>
         {% endif %}

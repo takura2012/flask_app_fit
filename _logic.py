@@ -3,9 +3,10 @@
 import random, config
 from datetime import datetime
 import requests
-from _models import Exercise, Muscle, Training, ExerciseMuscle, TrainingExercise, Plan, UserTraining, UserTrainingExercise, Plan_Trainings
+from _models import Exercise, Muscle, Training, ExerciseMuscle, TrainingExercise,\
+    Plan, UserTraining, UserTrainingExercise, Plan_Trainings, User
 from typing import List
-from sqlalchemy import or_
+from sqlalchemy import or_, desc
 from main import db
 
 
@@ -251,4 +252,45 @@ def set_train_complete(user_id, train_id):
     return 'OK'
 
 
+def find_prev_weight(ex_id, user_id):
 
+    user_trainings = UserTraining.query.filter_by(user_id=user_id).all()
+    ids = [user_training.id for user_training in user_trainings]
+    exercise = Exercise.query.get(ex_id)
+
+    user_training_exercise = UserTrainingExercise.query.filter(
+        UserTrainingExercise.user_training_id.in_(ids),
+        UserTrainingExercise.exercise_id == ex_id,
+        UserTrainingExercise.weight > 0
+    ).order_by(desc(UserTrainingExercise.id)).first()
+
+    if user_training_exercise:
+        previous_weight = user_training_exercise.weight
+    else:
+        previous_weight = 0
+
+    return previous_weight
+
+
+def get_exercise_statistics(user_id):
+
+    exercises_struct = {}
+    user_trainings = UserTraining.query.filter_by(user_id=user_id, completed=True).all()
+    for user_training in user_trainings:
+        user_training_exercises = UserTrainingExercise.query.filter_by(user_training_id=user_training.id).all()
+        for user_training_exercise in user_training_exercises:
+            ex_id = user_training_exercise.exercise_id
+            ex = Exercise.query.get(ex_id)
+            ex_name = ex.name
+            ex_date_unformat = user_training.date_completed
+            ex_date = ex_date_unformat.strftime("%d-%m-%Y %H:%M:%S")
+            ex_weight = user_training_exercise.weight
+            ex_skipped = user_training_exercise.skipped
+            try:
+                exercises_struct[ex_name].append({'date': ex_date, 'weight': ex_weight, 'skipped': ex_skipped})
+            except:
+                exercises_struct[ex_name] = []
+                print('EXCEPT')
+                exercises_struct[ex_name].append({'date':ex_date, 'weight': ex_weight, 'skipped': ex_skipped})
+
+    return exercises_struct

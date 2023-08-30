@@ -84,7 +84,7 @@ body {
     padding: 2px;
     border: 1px solid #ccc;
     border-radius: 5px;
-    background-color: rgb(255,255,240);
+    background-color: rgba(255,255,240, 0.8);
     box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
     max-width: 150px;
     width: 100%;
@@ -104,5 +104,19 @@ body {
 }
 
 .background-custom-light {
-    background-color: rgba(240,255,240, 0.4);
+    background-color: rgba(255,255,240, 0.8);
+}
+
+/* Переопределение высоты заголовка аккордеона */
+.accordion-header {
+    background-color: rgba(255,255,240, 0);
+    height: 30px; /* Здесь можно задать желаемую высоту в пикселях или другой единице измерения */
+    /* Другие стили, если необходимо */
+}
+
+/* Изменение стиля кнопки в заголовке аккордеона */
+.accordion-button {
+    height: 30px;
+    background-color: rgba(255,255,240, 0.8);
+    /* Другие стили, если необходимо */
 }

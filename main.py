@@ -720,8 +720,10 @@ def train_progress_start():
 
         exercise = Exercise.query.get(user_training_exercise.exercise_id)
         previous_weight = find_prev_weight(exercise.exercise_id, user_id)
+        max_weight = find_max_weight(exercise.exercise_id, user_id)
 
-    return render_template('current_exercise.html', exercise=exercise, previous_weight=previous_weight, user_training=user_training, user_training_exercise=user_training_exercise)
+    return render_template('current_exercise.html', exercise=exercise, previous_weight=previous_weight,
+                           user_training=user_training, user_training_exercise=user_training_exercise, max_weight=max_weight)
 
 
 @app.route('/train_progress_next', methods=['POST', 'GET'])
@@ -828,9 +830,6 @@ def statistics():
             completed_trainings.append([train, c_tr.id, ex_count, formatted_datetime ])
     completed_trainings.reverse()
 
-
-
-
     return render_template('statistics.html', uncompleted_trainings=uncompleted_trainings, completed_trainings=completed_trainings, user=user)
 
 
@@ -862,7 +861,6 @@ def statistic_details(user_training_id):
         weight = ute.weight
         finish_data.append({'ex_id': ex_id, 'ex_name': ex_name, 'ex_skipped': ex_skipped, 'weight': weight})
 
-    # print(finish_data)
     return render_template('training_finished.html', finish_data=finish_data)
 
 
@@ -872,17 +870,12 @@ def statistics_exercises():
     if request.method == 'POST':
         # взял с формы ИД юзера
         user_id = request.form.get('user_id')
-
-        # функция преобразует в словарь {ex_id:count_in, ...}
-        # counts = Counter(exercises)
-
-        # сортировка sorted(iterable, key=key, reverse=reverse) key это функция,
-        # lambda - анонимная название для элемента counts.items(), который передается в функцию
-        # sorted_counts = dict(sorted(counts.items(), key=lambda item: item[1], reverse=True))
+        trains_count = request.form.get('trains_count')
 
         exercises_struct = get_exercise_statistics(user_id)
+        # [[55, 'Разогрев+ разминка (10 минут)', 4, 1, [{'date': '28-08-2023 10:03:04', 'weight': 0, 'skipped': False},
 
-    return render_template('statistics_exercises.html', exercises_struct=exercises_struct)
+    return render_template('statistics_exercises.html', exercises_struct=exercises_struct, user_id=user_id, trains_count=trains_count)
 
 
 if __name__ == '__main__':

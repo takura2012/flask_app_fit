@@ -272,6 +272,20 @@ def find_prev_weight(ex_id, user_id):
     return previous_weight
 
 
+def find_max_weight(exercise_id, user_id):
+    user_trainings = UserTraining.query.filter_by(user_id=user_id).all()
+    ids = [user_trainings.id for user_trainings in user_trainings]
+
+    user_training_exercises = UserTrainingExercise.query.filter(
+        UserTrainingExercise.user_training_id.in_(ids),
+        UserTrainingExercise.exercise_id == exercise_id
+    ).all()
+
+    max_weight_uts = max(user_training_exercises, key=lambda x: x.weight)
+    max_weight = max_weight_uts.weight
+    return max_weight
+
+
 def get_exercise_statistics(user_id):
 
     exercises_struct = {}
@@ -280,17 +294,26 @@ def get_exercise_statistics(user_id):
         user_training_exercises = UserTrainingExercise.query.filter_by(user_training_id=user_training.id).all()
         for user_training_exercise in user_training_exercises:
             ex_id = user_training_exercise.exercise_id
-            ex = Exercise.query.get(ex_id)
-            ex_name = ex.name
             ex_date_unformat = user_training.date_completed
             ex_date = ex_date_unformat.strftime("%d-%m-%Y %H:%M:%S")
             ex_weight = user_training_exercise.weight
             ex_skipped = user_training_exercise.skipped
             try:
-                exercises_struct[ex_name].append({'date': ex_date, 'weight': ex_weight, 'skipped': ex_skipped})
+                exercises_struct[ex_id].append({'date': ex_date, 'weight': ex_weight, 'skipped': ex_skipped})
             except:
-                exercises_struct[ex_name] = []
-                print('EXCEPT')
-                exercises_struct[ex_name].append({'date':ex_date, 'weight': ex_weight, 'skipped': ex_skipped})
+                exercises_struct[ex_id] = []
+                exercises_struct[ex_id].append({'date':ex_date, 'weight': ex_weight, 'skipped': ex_skipped})
 
-    return exercises_struct
+    struc = []
+    for ex_id, unsorted_data in exercises_struct.items():
+        data = sorted(unsorted_data, key=lambda x: datetime.strptime(x['date'], '%d-%m-%Y %H:%M:%S'), reverse=True)
+        ex = Exercise.query.get(ex_id)
+        ex_name = ex.name
+        count = len(data)
+        skipped_count = len(list(filter(lambda item: item['skipped'], data)))
+        struc.append([ex_id, ex_name, count, skipped_count, data])
+
+    sorted_struc = sorted(struc, key=lambda struc: struc[2], reverse=True)
+
+    # [[55, 'Разогрев+ разминка (10 минут)', 4, 1, [{'date': '28-08-2023 10:03:04', 'weight': 0, 'skipped': False},
+    return sorted_struc

@@ -878,5 +878,12 @@ def statistics_exercises():
     return render_template('statistics_exercises.html', exercises_struct=exercises_struct, user_id=user_id, trains_count=trains_count)
 
 
+@app.route('/management')
+def management():
+
+
+    return render_template('management.html')
+
+
 if __name__ == '__main__':
     app.run(debug=True)

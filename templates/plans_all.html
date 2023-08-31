@@ -4,72 +4,81 @@
 {% endblock %}
 
 {% block body %}
-<h1>Тренировочные планы</h1>
+<div class="mt-3">
+    <h2>Тренировочные планы</h2>
 
-<form action="/plan_new/0" method="post">
-    <div class="container mb-2">
-        <input type="text" name="plan_name" id="plan_name" class="form-control" placeholder="Название нового плана (например: 3 дня, новичок, фулбоди)" required>
-    </div>
-    <div class="container mb-2">
-        <input type="submit" class="btn btn-primary" value="Создать">
-    </div>
-
-</form>
-
-
-<hr>
-<div class="row">
-    <div class="col-5">
-    </div>
-    <div class="col-7">
-    </div>
-</div>
-<div class="row">
-    <div class="col-5">
-
-        <div class="list-group" id="list-tab" role="tablist">
-        {% for plan, trains in trainings_in_plan.items() %}
-          <a class="nav-link {% if loop.index == 1 %} active {% endif %} link-underline link-underline-opacity-0 bg-opacity-0 fs-4" data-bs-toggle="list" href="#plan{{plan.id}}" role="tab">
-              {{plan.name}}
-          </a>
-          {% endfor %}
+    <form action="/plan_new/0" method="post">
+        <div class=" mb-2">
+            <input type="text" name="plan_name" id="plan_name" class="form-control" placeholder="Название нового плана (например: 3 дня, новичок, фулбоди)" required>
         </div>
-    </div>
-
-
-    <div class="col-7">
-
-
-        <div class="tab-content" id="nav-tabContent">
-          {% for plan, trains in trainings_in_plan.items() %}
-            <div class="tab-pane fade {% if loop.index == 1 %} show active {% endif %} border rounded-4 bg-opacity-60 p-3" id="plan{{plan.id}}" role="tabpanel" >
-                <div class="container text-light">
-                <h4>{{plan.name}}</h4>
-                    </div>
-
-                {% for i in range(trains|length) %}
-                <div class="container mb-2 text-light">
-                    <b>День {{i+1}}: </b> {{trains[i][0].name}} ({{ trains[i][1] }} минут)
-                </div>
-                {% endfor %}
-                <hr>
-                <div class="row">
-                    <div class="col-8">
-                        <a href="/assign_training/{{plan.id}}" class="btn btn-success btn-sm">Назначить</a>
-                    </div>
-                    <div class="col-4">
-                        <a href="/plan_new/{{plan.id}}" class="btn btn-primary btn-sm">Редактировать</a>
-                    </div>
-                </div>
-
-
-
+        <div class="mb-2 d-flex">
+            <div class="flex-grow-1">
+                <input type="submit" class="btn btn-success" value="Создать">
             </div>
-          {% endfor %}
+            <div class="me-5">
+                <a href="/new_train" class="1mx-3 link-primary link-offset-2 link-underline-opacity-25 link-underline-opacity-100-hover">Тренировки</a>
+            </div>
+            <div class="">
+                <a href="/" class=" link-primary link-offset-2 link-underline-opacity-25 link-underline-opacity-100-hover">Главная</a>
+            </div>
+        </div>
+
+    </form>
+
+
+    <hr>
+    <div class="row">
+        <div class="col-5">
+        </div>
+        <div class="col-7">
+        </div>
+    </div>
+    <div class="row">
+        <div class="col-5">
+
+            <div class="list-group" id="list-tab" role="tablist">
+            {% for plan, trains in trainings_in_plan.items() %}
+              <a class="nav-link {% if loop.index == 1 %} active {% endif %} link-underline link-underline-opacity-0 bg-opacity-0 fs-4" data-bs-toggle="list" href="#plan{{plan.id}}" role="tab">
+                  {{plan.name}}
+              </a>
+              {% endfor %}
+            </div>
+        </div>
+
+
+        <div class="col-7">
+
+
+            <div class="tab-content" id="nav-tabContent">
+              {% for plan, trains in trainings_in_plan.items() %}
+                <div class="tab-pane fade {% if loop.index == 1 %} show active {% endif %} border rounded-4 bg-opacity-60 p-3" id="plan{{plan.id}}" role="tabpanel" >
+                    <div class="container text-light">
+                    <h4>{{plan.name}}</h4>
+                        </div>
+
+                    {% for i in range(trains|length) %}
+                    <div class="container mb-2 text-light">
+                        <b>День {{i+1}}: </b> {{trains[i][0].name}} ({{ trains[i][1] }} минут)
+                    </div>
+                    {% endfor %}
+                    <hr>
+                    <div class="row">
+                        <div class="col-8">
+                            <a href="/assign_training/{{plan.id}}" class="btn btn-success btn-sm">Назначить</a>
+                        </div>
+                        <div class="col-4">
+                            <a href="/plan_new/{{plan.id}}" class="btn btn-primary btn-sm">Редактировать</a>
+                        </div>
+                    </div>
+
+
+
+                </div>
+              {% endfor %}
+            </div>
         </div>
     </div>
 </div>
-
 
 
 

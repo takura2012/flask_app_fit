@@ -14,7 +14,7 @@
 {% include "/modals/flash_mess.html" %}
 
 {% if current_train %}
-<div class="center-block ">
+<div class="d-flex justify-content-center align-items-center vh-100">
     <div class="content">
         <h3>{{current_train.name}}</h3>
             <hr>
@@ -26,20 +26,28 @@
         <hr>
         <form action="/train_progress_start" method="post">
             <div class="container">
-                    <div class="row mt-3">
-                        <div class="col-4">
-                            <a href="/plans_all" class="btn btn-primary">Другой</a>
-                        </div>
-                        <div class="col-4 text-end">
-                            <input type="submit" class="btn btn-success" value="Выполнить">
+                <div class="row mt-3">
+                        <div class="col">
+                            <input type="submit" class="btn btn-success w-100" value="Выполнить">
                             <input type="hidden" name="train_id" value="{{ current_train.training_id }}">
                             <input type="hidden" name="user_id" value="{{ current_user.id }}">
                         </div>
-                        <div class="col-4 text-end">
-                            <a href="/user_complete_train/{{current_train.training_id}}" class="link-offset-1">Завершить</a>
+                    </div>
+                    <div class="row mt-3 justify-content-center text-center">
+                        <div class="col border border-primary rounded-2 p-1 m-2">
+                            <a href="/plans_all" class="str-link link-primary link-offset-2 link-underline-opacity-25 link-underline-opacity-100-hover">Другой план</a>
+                        </div>
+
+                        <div class="col border border-primary rounded-2 p-1 m-2">
+                            <a href="/" class="str-link link-primary link-offset-2 link-underline-opacity-25 link-underline-opacity-100-hover">Главная</a>
+                        </div>
+
+                        <div class="col border border-danger rounded-2 p-1 m-2">
+                            <a href="/user_complete_train/{{current_train.training_id}}" class="str-link link-danger link-offset-2 link-underline-opacity-25 link-underline-opacity-100-hover">Завершить</a>
                         </div>
 
                     </div>
+
             </div>
         </form>
     </div>

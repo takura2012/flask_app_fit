@@ -5,52 +5,55 @@
 
 {% block body %}
 {% include "/modals/flash_mess.html" %}
-<form action="/statistics/exercises" method="post">
+<div class="pt-3">
+    <div>
+    <form action="/statistics/exercises" method="post">
 
-    <input type="submit" class="statistics-btn d-inline-flex p-2 fw-bold text-primary fs-6 link-underline link-underline-opacity-0" value="Упражнения">
-    <input type="hidden" name="user_id" value="{{user.id}}">
-    <input type="hidden" name="trains_count" value="{{completed_trainings|length + uncompleted_trainings|length}}">
-<a href="/" class="statistics-btn d-inline-flex p-2 fw-bold fs-6 link-underline link-underline-opacity-0">
-    Главная
-</a>
-</form>
-
-
-
-{% for ut in uncompleted_trainings %}
-<div class="row mt-3 text-success fw-semibold">
-<div class="col">
-    {{ ut[0].name }}
-</div>
-
-</div>
-{% endfor %}
-<hr>
-
-{% for ct in completed_trainings %}
-<div class="container mb-1 background-custom-light rounded-3">
+        <input type="submit" class="statistics-btn d-inline-flex p-2 fw-bold text-primary fs-6 link-underline link-underline-opacity-0" value="Упражнения">
+        <input type="hidden" name="user_id" value="{{user.id}}">
+        <input type="hidden" name="trains_count" value="{{completed_trainings|length + uncompleted_trainings|length}}">
+    <a href="/" class="statistics-btn d-inline-flex p-2 fw-bold fs-6 link-underline link-underline-opacity-0">
+        Главная
+    </a>
+    </form>
 
 
-    <div class="row mb-1 text-secondary fw-semibold">
-        <div class="col col-md-auto">
-            {{ct[3]}}
+
+    {% for ut in uncompleted_trainings %}
+    <div class="row mt-3 text-success fw-semibold">
+    <div class="col">
+        {{ ut[0].name }}
+    </div>
+
+    </div>
+    {% endfor %}
+    <hr>
+
+    {% for ct in completed_trainings %}
+    <div class="container mb-1 background-custom-light rounded-3">
+
+
+        <div class="row mb-1 text-secondary fw-semibold">
+            <div class="col col-md-auto">
+                {{ct[3]}}
+            </div>
+            <div class="col">
+                {{ ct[0].name }}
+            </div>
         </div>
-        <div class="col">
-            {{ ct[0].name }}
+        <div class="row mb-1 text-secondary">
+            <div class="col">
+                Упражнений: {{ct[2]}} <a href="/statistics/details/{{ct[1]}}" >(просмотр)</a>
+            </div>
+
+            <div class="col">
+                <a href="/statistics/delete/{{ct[1]}}">Удалить</a>
+            </div>
         </div>
     </div>
-    <div class="row mb-1 text-secondary">
-        <div class="col">
-            Упражнений: {{ct[2]}} <a href="/statistics/details/{{ct[1]}}" >(просмотр)</a>
-        </div>
-
-        <div class="col">
-            <a href="/statistics/delete/{{ct[1]}}">Удалить</a>
-        </div>
+    {% endfor %}
     </div>
 </div>
-{% endfor %}
-
 
 
 

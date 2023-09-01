@@ -4,12 +4,11 @@
 {% endblock %}
 
 {% block body %}
-
-    <div class="center-block">
+    <div class="d-flex justify-content-center align-items-center vh-100">
         <div class="content">
             <h3>{{exercise.name}}</h3>
             <hr>
-            {% if exercise.target not in ['Кардио', 'Разминка', 'Пресс'] %}
+            {% if exercise.target not in ['Кардио', 'Разминка', 'Пресс'] and max_weight>0%}
             <div class="row mx-2">
                 <div class="col">Вес в предыдущей тренировке: {{previous_weight}} кг</div>
                 <div class="col">Максимальный вес в упражнении: {{max_weight}} кг</div>

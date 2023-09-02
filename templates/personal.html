@@ -1,0 +1,23 @@
+{% extends 'base.html' %}
+{% block title %}
+Главная
+{% endblock %}
+
+{% block body %}
+
+{% if not user.is_anonymous %}
+    <div class="py-3 fs-4">
+        <p>Редактировать личные данные ({{user.name}})</p>
+        <div class="mb-2">
+            <a href="/user_logout" class="fs-5 fw-semibold btn btn-danger">Выйти</a>
+        </div>
+    </div>
+{% else %}
+<div class="p-5 fs-3">
+<h1>Здесь ничего нет.</h1>
+</div>
+{% endif %}
+<div class=" fs-3">
+<a href="/index">Вернуться</a>
+</div>
+{% endblock %}

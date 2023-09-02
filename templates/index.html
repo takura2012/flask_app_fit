@@ -5,37 +5,44 @@
 
 {% block body %}
 
-{% include "/modals/flash_mess.html" %}
+
 
     <div class="d-flex justify-content-center align-items-center vh-100">
         <div class="m-0">
-            <div class="row justify-content-center text-center">
-                    <a href="/current_train" class="index-div fs-4 fw-semibold link-underline link-underline-opacity-0 position-relative m-0">
-                    Начать тренировку
-                        {% if uncompleted_user_trainings|length >0 %}
-                        <span class="position-absolute top-0 start-100 translate-middle badge rounded-pill bg-success text-warning">
-                             {{ uncompleted_user_trainings|length }}
-                        </span>
-                        {% endif %}
-                    </a>
+            {% if current_user.is_anonymous %}
+                <form action="/user_login" method="post">
+                     {% include '/modals/login_div.html' %}
+                </form>
 
-            </div>
-            <div class="row justify-content-center text-center">
-                    <a href="/statistics" class="index-div fs-4 fw-semibold link-underline link-underline-opacity-0 m-0">
-                    Статистика
-                    </a>
-            </div>
-            <div class="row justify-content-center text-center">
-                <a href="/management" class="index-div fs-4 fw-semibold link-underline link-underline-opacity-0 m-0">
-                Управление
+            {% else %}
+                <div class="row justify-content-center text-center">
+                        <a href="/current_train" class="index-div fs-4 fw-semibold link-underline link-underline-opacity-0 position-relative m-0">
+                        Начать тренировку
+                            {% if uncompleted_user_trainings|length >0 %}
+                            <span class="position-absolute top-0 start-100 translate-middle badge rounded-pill bg-success text-warning">
+                                 {{ uncompleted_user_trainings|length }}
+                            </span>
+                            {% endif %}
+                        </a>
 
-                </a>
-            </div>
-            <div class="row justify-content-center text-center">
-                <a href="#" class="index-div fs-4 fw-semibold link-underline link-underline-opacity-0 m-0">
-                Информация
-                </a>
-            </div>
+                </div>
+                <div class="row justify-content-center text-center">
+                        <a href="/statistics" class="index-div fs-4 fw-semibold link-underline link-underline-opacity-0 m-0">
+                        Статистика
+                        </a>
+                </div>
+                <div class="row justify-content-center text-center">
+                    <a href="/management" class="index-div fs-4 fw-semibold link-underline link-underline-opacity-0 m-0">
+                    Подготовка
+
+                    </a>
+                </div>
+                <div class="row justify-content-center text-center">
+                    <a href="/personal" class="index-div fs-4 fw-semibold link-underline link-underline-opacity-0 m-0">
+                    Личный кабинет
+                    </a>
+                </div>
+            {% endif %}
         </div>
     </div>
 

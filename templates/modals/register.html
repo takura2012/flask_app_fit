@@ -1,0 +1,30 @@
+{% extends 'base.html' %}
+{% block title %}
+Регистрация
+{% endblock %}
+
+{% block body %}
+
+<form method="post">
+    <div class="center-block">
+        <div class="content">
+            <div class="text-center mb-3 border border-secondary p-2 rounded-3">
+                <input class="form-control mb-2" name="username" type="text" placeholder="Пользователь" required>
+                <input class="form-control mb-2" name="password" type="password" placeholder="Пароль" required>
+                <input class="form-control mb-2" name="email" type="text" placeholder="Электронный адрес" required>
+            </div>
+            <div class="row ">
+                <div class="col text-end">
+                    <input type="submit" class="btn btn-success" value="Подтвердить">
+                </div>
+                <div class="col">
+                    <a href="#" class="btn btn-primary">Восстановить</a>
+                </div>
+
+                {% include '/modals/flash_mess.html' %}
+            </div>
+        </div>
+    </div>
+</form>
+
+{% endblock %}

@@ -3,6 +3,8 @@ from sqlalchemy import Column, Integer, String, ForeignKey, JSON
 from sqlalchemy.orm import relationship
 from sqlalchemy.schema import ForeignKeyConstraint
 from datetime import datetime
+from flask_login import UserMixin, AnonymousUserMixin
+from werkzeug.security import generate_password_hash
 
 db = SQLAlchemy()
 
@@ -114,18 +116,19 @@ class Plan_Trainings(db.Model):
     training_id = db.Column(db.Integer,db.ForeignKey('trainings.training_id', ondelete='CASCADE'))
 
 
-class User(db.Model):
+class User(db.Model, UserMixin):
     __tablename__ = 'users'
 
     id = db.Column(db.Integer, primary_key=True)
-    name = db.Column(db.String(50), nullable=False, unique=True)
-    email = db.Column(db.String(50), nullable=False, unique=True)
-    level = db.Column(db.Integer, default=0)
+    name = db.Column(db.String(80), nullable=False, unique=True)
+    password = db.Column(db.String(80), nullable=False)
+    role = db.Column(db.String(80), nullable=False, default='user')
+    email = db.Column(db.String(80), unique=True, nullable=False)
 
     trainings = relationship('UserTraining', back_populates='user')
 
     def __repr__(self):
-        return f'User {self.id}'
+        return f'User: {self.name} '
 
 
 class UserTraining(db.Model):

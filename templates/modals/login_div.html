@@ -1,0 +1,12 @@
+<div class="text-center mb-3 border border-secondary p-2 rounded-3">
+    <input class="form-control mb-2" name="username" type="text" placeholder="пользователь" required>
+    <input class="form-control mb-2" name="password" type="password" placeholder="пароль" required>
+
+    <input type="submit" class="btn btn-success stretched" value="Вход">
+    <div class="row mt-2">
+        <div class="col"><a href="/register" class="">Регистрация</a></div>
+        <div class="col"><a href="#" class="">Восстановить</a></div>
+
+    </div>
+    {% include '/modals/flash_mess.html' %}
+</div>

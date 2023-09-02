@@ -11,6 +11,9 @@ from sqlalchemy.orm import relationship
 from datetime import datetime
 from _logic import *
 from flask_session import Session
+from flask_login import LoginManager, UserMixin, login_user, login_required, logout_user, current_user, AnonymousUserMixin
+from werkzeug.security import generate_password_hash, check_password_hash
+import uuid
 
 
 app = Flask(__name__)
@@ -20,24 +23,78 @@ db.init_app(app)
 Session(app)
 migrate = Migrate(app, db)
 
+login_manager = LoginManager()
+login_manager.init_app(app)
+
+@login_manager.user_loader
+def load_user(user_id):
+    return User.query.get(int(user_id))
+
+
+@app.route('/user_login', methods=['POST', 'GET'])
+def user_login():
+
+    if request.method == 'POST':
+        username = request.form['username']
+        password = request.form['password']
+
+        user = User.query.filter_by(name=username).first()
+
+        if user and check_password_hash(user.password, password):
+            login_user(user)
+            return redirect(url_for('index'))
+
+        flash('Ошибка входа', 'danger')
+
+    return redirect(url_for('index'))
+
+
+@app.route('/user_logout')
+def user_logout():
+
+    logout_user()
+
+    return redirect(url_for('index'))
+
+
+@app.route('/register', methods=['POST', 'GET'])
+def register():
+
+    if request.method == 'POST':
+        username = request.form['username']
+        password = request.form['password']
+        hashed_password = generate_password_hash(password)
+        email = request.form['email']
+        conditions = or_(User.name == username, User.email == email)
+        user = User.query.filter(conditions).first()
+
+        if not user:
+            user = User(name=username, password=hashed_password, email=email)
+            db.session.add(user)
+            try:
+                db.session.commit()
+            except:
+                return ('Ошибка добавления пользователя в базу')
+        else:
+            flash('Пользователь с такими данными уже существует')
+            return redirect('register')
+
+        return redirect(url_for('index'))
+
+
+    return render_template('/modals/register.html')
+
+
 @app.route('/index', methods=['POST', 'GET'])
 @app.route('/', methods=['POST', 'GET'])
 def index():
 
     try:
-        current_user_name = session['current_user_name']
-        user = User.query.filter_by(name=current_user_name).first()
-        # flash(f'Пользователь в системе: {user.name}')
+        uncompleted_user_trainings = UserTraining.query.filter_by(user_id=current_user.id, assigned=True, completed=False).all()
     except:
-        flash('Пользователь не в системе')
-        return render_template("index.html")
+        return render_template("index.html", current_user=current_user)
 
-    try:
-        uncompleted_user_trainings = UserTraining.query.filter_by(user_id=user.id, assigned=True, completed=False).all()
-    except:
-        return render_template("index.html")
-
-    return render_template("index.html", uncompleted_user_trainings=uncompleted_user_trainings)
+    return render_template("index.html", uncompleted_user_trainings=uncompleted_user_trainings, current_user=current_user)
 
 
 @app.route('/usefilter', methods=['POST'])
@@ -118,8 +175,6 @@ def list_edit(counters):
                 form_list = request.form.getlist('filters' + str(i + 1))
                 if any(sublist for sublist in form_list if sublist):
                     index_dict['filter_list'] += form_list
-
-            # print(index_dict['filter_list'])
 
             exercise.filters = index_dict['filter_list']
 
@@ -424,7 +479,7 @@ def exercise_filter_list():
 @app.route('/plans_all', methods=['POST', 'GET'])
 def plans_all():
 
-#   тут нужно будет фильтровать по юзеру для уменьшения трафика
+#   тут нужно будет фильтровать по юзеру для уменьшения трафика IMPORTANT
     plans = Plan.query.all()
     plan_trainings = Plan_Trainings.query.all()
     trains = Training.query.all()
@@ -648,11 +703,9 @@ def migration_new():
 @app.route('/current_train', methods=['POST', 'GET'])
 def current_train():
 
-    current_user_name = session.get('current_user_name', 'Guest')
-
-    current_user = User.query.filter_by(name=current_user_name).first()
 
     if not current_user:
+        flash('Route current_train - usercheck failed, current_user is not defined')
         return render_template('current_train.html')
 
     all_user_trains = get_user_trains(current_user)
@@ -679,30 +732,26 @@ def current_train():
 @app.route('/assign_training/<int:plan_id>')
 def assign_training(plan_id):
 
-    current_user = User.query.filter_by(name='Admin').first()
-    session['current_user_name'] = current_user.name
+    if current_user:
+        del_current_user_plan(current_user)
 
-    del_current_user_plan(current_user)
-
-    if not assign_plan_to_user(current_user, plan_id):
-        return 'Ошибка assign_plan_to_user'
+        if not assign_plan_to_user(current_user, plan_id):
+            return 'Ошибка assign_plan_to_user'
 
     return redirect(url_for('index'))
 
 
 @app.route('/user_complete_train/<int:train_id>')
 def user_complete_train(train_id):
-    try:
-        current_user_name = session['current_user_name']
-    except:
+
+    if not current_user:
         flash('Ошибка в определении пользователя (в сессии нет пользователя)')
         return redirect(url_for('current_train'))
-    user = User.query.filter_by(name=current_user_name).first()
+    # user = User.query.filter_by(name=current_user_name).first()
 
-    res = set_train_complete(user.id, train_id)
+    res = set_train_complete(current_user.id, train_id)
     if res != 'OK':
         flash('Ошибка при установке завершения тренировки (запись в базу)')
-        flash(res)
 
     return redirect(url_for('index'))
 
@@ -804,15 +853,12 @@ def train_progress_skip():
 @app.route('/statistics')
 def statistics():
 
-    try:
-        current_user_name = session['current_user_name']
-        user = User.query.filter_by(name=current_user_name).first()
-    except:
+    if not current_user:
         flash('Пользователь не в системе')
         return render_template("index.html")
 
-    u_utr = UserTraining.query.filter_by(user_id=user.id, assigned=True, completed=False).all()
-    c_utr = UserTraining.query.filter_by(user_id=user.id, assigned=True, completed=True).all()
+    u_utr = UserTraining.query.filter_by(user_id=current_user.id, assigned=True, completed=False).all()
+    c_utr = UserTraining.query.filter_by(user_id=current_user.id, assigned=True, completed=True).all()
 
     uncompleted_trainings = []
     for u_tr in u_utr:
@@ -830,7 +876,7 @@ def statistics():
             completed_trainings.append([train, c_tr.id, ex_count, formatted_datetime ])
     completed_trainings.reverse()
 
-    return render_template('statistics.html', uncompleted_trainings=uncompleted_trainings, completed_trainings=completed_trainings, user=user)
+    return render_template('statistics.html', uncompleted_trainings=uncompleted_trainings, completed_trainings=completed_trainings, user=current_user)
 
 
 @app.route('/statistics/delete/<int:user_training_id>')
@@ -878,11 +924,22 @@ def statistics_exercises():
     return render_template('statistics_exercises.html', exercises_struct=exercises_struct, user_id=user_id, trains_count=trains_count)
 
 
+@app.route('/personal')
+def personal():
+
+    if not current_user:
+        return render_template('management.html')
+
+    return render_template('personal.html', user=current_user)
+
+
 @app.route('/management')
 def management():
 
+    if not current_user:
+        return render_template('management.html')
 
-    return render_template('management.html')
+    return render_template('management.html', user=current_user)
 
 
 if __name__ == '__main__':

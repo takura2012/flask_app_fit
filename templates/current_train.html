@@ -7,8 +7,12 @@
 
 
 {% if not current_train %}
-    <h2>У вас нет назначенных тренировок</h2>
-    <p>Назначить тренировочный план можно на вкладке <a href="/plans_all">Планы</a></p>
+<div class="d-flex justify-content-center align-items-center vh-100">
+    <div class="fs-3">
+    <h1>У вас нет назначенных тренировок</h1>
+    <p><a href="/plans_all">Назначить</a> тренировочный план. </p>
+    </div>
+</div>
 {% endif %}
 
 {% include "/modals/flash_mess.html" %}

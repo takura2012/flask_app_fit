@@ -135,7 +135,7 @@ class UserTraining(db.Model):
     __tablename__ = 'user_trainings'
 
     id = Column(Integer, primary_key=True)
-    user_id = Column(Integer, ForeignKey('users.id'))
+    user_id = Column(Integer, ForeignKey('users.id', ondelete='CASCADE'))
     training_id = Column(Integer, ForeignKey('trainings.training_id'))
     assigned = Column(db.Boolean, default=False)
     completed = Column(db.Boolean, default=False)
@@ -144,7 +144,7 @@ class UserTraining(db.Model):
 
     user = relationship('User', back_populates='trainings')
     training = relationship('Training', back_populates='user_trainings')
-    training_exercises = relationship('UserTrainingExercise', back_populates='user_training', cascade='all, delete-orphan')
+    training_exercises = relationship('UserTrainingExercise', back_populates='user_training')
 
 
 class UserTrainingExercise(db.Model):

@@ -5,7 +5,7 @@
 
 {% block body %}
 
-
+{% include "/modals/flash_mess.html" %}
 
 <!-- Раздел Имя тренировки -->
         <div class="row mt-3">
@@ -16,8 +16,10 @@
 
             <div class="col-4">
                 <a href="/new_train" class="mx-3 link-primary link-offset-2 link-underline-opacity-25 link-underline-opacity-100-hover">Вернуться</a>
-                <a href="#" data-bs-toggle="modal" data-bs-target="#rename_train" class="mx-3 link-success link-offset-2 link-underline-opacity-25 link-underline-opacity-100-hover">Переименовать</a>
-                <a href="#" data-bs-toggle="modal" data-bs-target="#delete_train" class="mx-3 link-danger link-offset-2 link-underline-opacity-25 link-underline-opacity-100-hover">Удалить</a>
+                {% if train.owner == current_user.name %}
+                    <a href="#" data-bs-toggle="modal" data-bs-target="#rename_train" class="mx-3 link-success link-offset-2 link-underline-opacity-25 link-underline-opacity-100-hover">Переименовать</a>
+                    <a href="#" data-bs-toggle="modal" data-bs-target="#delete_train" class="mx-3 link-danger link-offset-2 link-underline-opacity-25 link-underline-opacity-100-hover">Удалить</a>
+                {% endif %}
             </div>
 
 
@@ -50,11 +52,12 @@
                     {{te_info[1]}}x{{te_info[2]}} ({{te_info[0].time_per_set*te_info[1]}} мин.)
                 </div>
                 <div class="col-2">
+                    {% if train.owner == current_user.name %}
                     <button type="button" class="btn btn-outline-primary btn-sm" data-bs-toggle="modal" data-bs-target="#confirmDelete{{ te_info[0].exercise_id }}">Редактировать</button>
                     <form action="/edit_exercise_in_train/{{train.training_id}}" method="post">
                         {% include "/modals/modal_del_exercise_from_train.html" %}
                     </form>
-
+                    {% endif %}
                 </div>
         {% endfor %}
                 <div class="col-6 fs-4">
@@ -71,86 +74,91 @@
 {% endif %}
 </section>
 <hr>
+{% if train.owner == current_user.name %}
+    <!-- Раздел Фильтры -->
+    <form action="/get_exercise_filter_list" method="post">
 
-<!-- Раздел Фильтры -->
-<form action="/get_exercise_filter_list" method="post">
-
-    <div class="row mb-0">
-        <div class="col-2">
-            <b>Фильтры упражнений:</b>
-        </div>
-        <div class="col-2">
-
-            <div class="container-fluid">
-            <select name="select_target" id="select_target" class="form-select form-select-md mb-3 me-2" aria-label=".form-select-md example">>
-                {% for num in range(config_filter_targets|length) %}
-                    <option value="{{num-1}}" {% if target_filter|int+1 == num %} selected {% endif %}>{{config_filter_targets[num]}}
-                {% endfor %}
-            </select>
+        <div class="row mb-0">
+            <div class="col-2">
+                <b>Фильтры упражнений:</b>
             </div>
-        </div>
-        <div class="col-2">
-            <input type="submit" class="btn btn-primary" value="Применить фильтры">
+            <div class="col-2">
 
-        </div>
-        <div class="col-7">
-
-        </div>
-    </div>
-    <hr>
-    <div class="row mb-2">
-                {% for i in range(config_filters|length) %}
-        <div class="col-2">
-                    {% for key, filter in config_filters[i].items() %}
-
-                        <div class="form-check">
-                            <input class="form-check-input" type="checkbox" name="filters{{i+1}}" value="{{key}}" id="chk_{{key}}" {% if key in exercise_filter_list[i]  %} checked {% endif %}>
-                            <label class="form-check-label" for="chk_{{key}}">
-                               {{filter}}
-                            </label>
-                        </div>
-
-
+                <div class="container-fluid">
+                <select name="select_target" id="select_target" class="form-select form-select-md mb-3 me-2" aria-label=".form-select-md example">>
+                    {% for num in range(config_filter_targets|length) %}
+                        <option value="{{num-1}}" {% if target_filter|int+1 == num %} selected {% endif %}>{{config_filter_targets[num]}}
                     {% endfor %}
+                </select>
+                </div>
+            </div>
+            <div class="col-2">
+                <input type="submit" class="btn btn-primary" value="Применить фильтры">
+
+            </div>
+            <div class="col-7">
+
+            </div>
         </div>
-                {% endfor %}
+        <hr>
+        <div class="row mb-2">
+                    {% for i in range(config_filters|length) %}
+            <div class="col-2">
+                        {% for key, filter in config_filters[i].items() %}
 
-    </div>
-</form>
+                            <div class="form-check">
+                                <input class="form-check-input" type="checkbox" name="filters{{i+1}}" value="{{key}}" id="chk_{{key}}" {% if key in exercise_filter_list[i]  %} checked {% endif %}>
+                                <label class="form-check-label" for="chk_{{key}}">
+                                   {{filter}}
+                                </label>
+                            </div>
 
-<!-- Раздел Добавление -->
-<form action="/train_add_ex" method="post">
-        <input type="hidden" name="train_id_hidden" value="{{train.training_id}}">
-        <select name="select_exercise" id="select_exercise" class="form-select form-select-md mb-3 me-2" aria-label=".form-select-md example">>
-                {% for ex in exercises %}
-                    <option value="{{ex.exercise_id}}">{{ex.name}}
-                {% endfor %}
-        </select>
 
-            <div class="row mb-2">
-            <div class="col-3">
-                Подходы <br>
-                <input type="number" name="sets" id="sets" class="form-control mb-2" required>
+                        {% endfor %}
             </div>
-            <div class="col-3">
-                Повторения <br>
-                <input type="number" name="reps" id="reps" class="form-control mb-2" required><br>
-            </div>
-            <div class="col-3">
-                <br>
-                <input type="submit" class="btn btn-success" value="Добавить упражнение">
-            </div>
-            </div>
-</form>
+                    {% endfor %}
 
-<!-- Раздел Модал переименование -->
-<form action="/train_rename" method="post">
-    {% include "/modals/modal_rename_train.html" %}
-</form>
+        </div>
+    </form>
 
-<form action="/train_delete" method="post">
-{% include "/modals/modal_del_training.html" %}
-</form>
+    <!-- Раздел Добавление -->
+    <form action="/train_add_ex" method="post">
+            <input type="hidden" name="train_id_hidden" value="{{train.training_id}}">
+            <select name="select_exercise" id="select_exercise" class="form-select form-select-md mb-3 me-2" aria-label=".form-select-md example">>
+                    {% for ex in exercises %}
+                        <option value="{{ex.exercise_id}}">{{ex.name}}
+                    {% endfor %}
+            </select>
+
+                <div class="row mb-2">
+                <div class="col-3">
+                    Подходы <br>
+                    <input type="number" name="sets" id="sets" class="form-control mb-2" required>
+                </div>
+                <div class="col-3">
+                    Повторения <br>
+                    <input type="number" name="reps" id="reps" class="form-control mb-2" required><br>
+                </div>
+                <div class="col-3">
+                    <br>
+                    <input type="submit" class="btn btn-success" value="Добавить упражнение">
+                </div>
+                </div>
+    </form>
+
+    <!-- Раздел Модал переименование -->
+    <form action="/train_rename" method="post">
+        {% include "/modals/modal_rename_train.html" %}
+    </form>
+
+    <form action="/train_delete" method="post">
+    {% include "/modals/modal_del_training.html" %}
+    </form>
+{% endif %}
+
+{% if train.owner != current_user.name %}
+    <span class="text-primary">Вы не имеете права редактировать эту тренировку</span>
+{% endif %}
 
 
 {% endblock %}

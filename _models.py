@@ -78,6 +78,7 @@ class Training(db.Model):
 
     training_id = db.Column(db.Integer, primary_key=True)
     name = db.Column(db.String(50), nullable=False)
+    owner = db.Column(db.String(80), default='admin')
 
     exercises = relationship('Exercise', secondary='training_exercises', overlaps="trainings")
     user_trainings = relationship('UserTraining', back_populates='training', cascade='all, delete-orphan')

@@ -275,16 +275,12 @@ def create_exercises():
 # ------------------------------------------------TRAIN----------------------------------------------------------------
 @app.route('/train_add_ex', methods=['POST', 'GET'])
 def train_add_ex():
-    # IMPORTANT2 - сделать чтобы тренировки админа не редактировались
 
     if request.method == 'POST':    # при получении данных с формы
 
-        # try:
-        #     train = session['train']
-        # except:
-        #     return '<h1>Ошибка: Тренировка не найдена</h1>'
-        # train_id = train.training_id
         train_id = request.form.get('train_id_hidden')
+        if Training.query.get(train_id).owner != current_user.name:
+            return redirect('index')
         ex_id = request.form.get('select_exercise')
         sets = request.form.get('sets')
         reps = request.form.get('reps')
@@ -309,7 +305,8 @@ def train_add_ex():
 
 @app.route('/train_del_exercise/<int:train_id>/<int:ex_id>')
 def train_del_exercise(train_id, ex_id):
-    # IMPORTANT2 - сделать чтобы тренировки админа не редактировались
+    if Training.query.get(train_id).owner != current_user.name:
+        return redirect(url_for('index'))
 
     training_exercise = TrainingExercise.query.filter_by(training_id=train_id, exercise_id=ex_id).first()
 
@@ -330,9 +327,10 @@ def train_del_exercise(train_id, ex_id):
 
 @app.route('/edit_exercise_in_train/<int:train_id>', methods=['POST', 'GET'])
 def edit_exercise_in_train(train_id):
-    # IMPORTANT2 - сделать чтобы тренировки админа не редактировались
     try:
         train = Training.query.get(train_id)
+        if train.owner != current_user.name:
+            return redirect(url_for('index'))
     except:
         return 'Ошибка: тренировка не найдена'
 
@@ -355,14 +353,14 @@ def edit_exercise_in_train(train_id):
 
 @app.route("/new_train", methods=['POST', 'GET'])
 def new_train():
-    # IMPORTANT2 - сделать чтобы тренировки отображались свои или админа, ввести владельца тренировок
 
-    trains_list = Training.query.all()
+    conditions = or_(Training.owner == 'admin', Training.owner == current_user.name)
+    trains_list = Training.query.filter(conditions).all()
     if request.method == 'POST':
         train_name = request.form.get('train_name')
         new_name = generate_unique_train_name(train_name)
 
-        new_train = Training(name=new_name)
+        new_train = Training(name=new_name, owner=current_user.name)
         db.session.add(new_train)
         try:
             db.session.commit()
@@ -379,10 +377,13 @@ def new_train():
 
 @app.route('/edit_train/<int:train_id>', methods=['POST', 'GET'])
 def edit_train(train_id):
-    # IMPORTANT2 - сделать чтобы тренировки админа не редактировались
+
+    train = Training.query.get(train_id)  # нахожу тренировку по ID которое передано в роуте
+    if train.owner != current_user.name:
+        return redirect('index')
+
     config_filters = config.FILTER_LIST # основные фильтры из конфига (список списков)
     config_filter_targets = config.FILTER_TARGETS   # список фильтров таргета - групп мышц
-    train = Training.query.get(train_id)  # нахожу тренировку по ID которое передано в роуте
     exercise_filter_list = session.get('exercise_filter_list', [])  # загрузка списка фильтров из сессии, или пустой
     target_filter = session.get('target_filter','-1')   # загрузка фильтра таргета из сессии, по умолч -1 (все)
 
@@ -422,12 +423,14 @@ def edit_train(train_id):
 
 @app.route('/train_rename', methods=['POST', 'GET'])
 def train_rename():
-    # IMPORTANT2 - сделать чтобы тренировки админа не переименовывались
     if request.method == 'POST':
 
         train_id = request.form.get('train_id_hidden')
 
         train = Training.query.get(train_id)
+        if train.owner != current_user.name:
+            flash('У вас нет права переименовать эту тренировку')
+            return redirect(url_for('edit_train', train_id=train_id))
 
         if train is None:
             return 'Ошибка: тренировка для переименования не найдена'
@@ -451,21 +454,31 @@ def train_delete():
 
     if request.method == 'POST':
         train_id = request.form.get('train_id_hidden')
-        train = Training.query.get(train_id)    # IMPORTANT2 - сделать чтобы тренировки админа не удалялись
-        user_trains = UserTraining.query.filter_by(training_id=train_id, user_id=current_user.id).all()
-        print(f'Deleted train for user {current_user.id} - {current_user.name}')
+        train = Training.query.get(train_id)
+
+        if train.owner != current_user.name:
+            flash('У вас нет права удалить эту тренировку')
+            return redirect(url_for('edit_train', train_id=train_id))
+
+        user_trains = UserTraining.query.filter_by(training_id=train_id).all()
         user_trains_ids = [user_train.id for user_train in user_trains]
         user_train_exercises = UserTrainingExercise.query.filter(UserTrainingExercise.user_training_id.in_(user_trains_ids)).all()
-
-        for user_train_exercise in user_train_exercises:
-            db.session.delete(user_train_exercise)
 
         for user_train in user_trains:
             db.session.delete(user_train)
 
+        for user_train_exercise in user_train_exercises:
+            db.session.delete(user_train_exercise)
+
         plan_trains = Plan_Trainings.query.filter_by(training_id=train_id).all()
         for plan_train in plan_trains:
             db.session.delete(plan_train)
+
+        # admin_plans = Plan.query.filter_by(owner='admin').all()
+        #
+        # for admin_plan in admin_plans:
+        #     if Plan_Trainings.query.filter_by(plan_id=admin_plan.id).first():
+        #         db.session.delete(admin_plan)
 
         db.session.delete(train)
         try:
@@ -500,10 +513,8 @@ def exercise_filter_list():
 @app.route('/plans_all', methods=['POST', 'GET'])
 def plans_all():
 
-#   тут нужно будет фильтровать по юзеру для уменьшения трафика IMPORTANT
     plans = Plan.query.filter_by(owner=current_user.name).all()
-    # if current_user.role == 'admin'
-    admin_plans = Plan.query.filter_by(owner='admin').all() # тут нужно сделать через role, также удаление и переименование
+    admin_plans = Plan.query.filter_by(owner='admin').all()
     plans += admin_plans
     plan_trainings = Plan_Trainings.query.all()
     trains = Training.query.all()
@@ -529,8 +540,9 @@ def plans_all():
 
 @app.route('/plan_new/<int:plan_id>', methods=['POST', 'GET'])
 def plan_new(plan_id):
-    trainings = Training.query.all()
 
+    conditions = or_(Training.owner == 'admin', Training.owner == current_user.name)
+    trainings = Training.query.filter(conditions).all()
 
     if request.method == 'POST' and plan_id == 0:
         plan_name = request.form.get('plan_name')
@@ -547,6 +559,11 @@ def plan_new(plan_id):
             return 'Ошибка при создании нового плана тренировок'
     else:
         plan = Plan.query.get(plan_id)
+        if not plan:
+            return redirect(url_for('plans_all'))
+        if plan.owner != current_user.name:
+            flash('У вас нет прав редактировать этот план!')
+            return redirect(url_for('plans_all'))
 
     plan_trainings = Plan_Trainings.query.filter_by(plan_id=plan.id).all()
 
@@ -556,12 +573,13 @@ def plan_new(plan_id):
 
 @app.route('/plan_rename', methods=['POST', 'GET'])
 def plan_rename():
-    # IMPORTANT переименовівать план только принадлежащий пользователю
     if request.method == 'POST':
 
         plan_id = request.form.get('plan_id')
         plan_new_name = request.form.get('plan_new_name')
         plan = Plan.query.get(plan_id)
+        if plan.owner != current_user.name:
+            return redirect(url_for('index'))
         plan_new_name = generate_unique_plan_name(plan_new_name)
 
         plan.name = plan_new_name
@@ -577,8 +595,9 @@ def plan_rename():
 
 @app.route('/plan_delete/<int:plan_id>')
 def plan_delete(plan_id):
-    # IMPORTANT удалять план только принадлежащий пользователю
     plan = Plan.query.get(plan_id)
+    if plan.owner != current_user.name:
+        return redirect(url_for('index'))
     plan_trainings = Plan_Trainings.query.filter_by(plan_id=plan_id).all()
     for plan_training in plan_trainings:
         db.session.delete(plan_training)
@@ -599,7 +618,6 @@ def plan_delete(plan_id):
 
 @app.route('/plan_add_train', methods=['POST', 'GET'])
 def plan_add_train():
-    # IMPORTANT редактировать план только принадлежащий пользователю
 
     if request.method == 'POST':
         plan_id = request.form.get('plan_id_hidden')
@@ -607,7 +625,9 @@ def plan_add_train():
         plan = Plan.query.get(plan_id)
         train = Training.query.get(train_id)
 
-        # plan.trainings.append(train)
+        if Plan.query.get(plan_id).owner != current_user.name:
+            flash('У вас нет прав редактировать этот план!')
+            return redirect(url_for('plans_all'))
 
         # для дубликатов:
         PT = Plan_Trainings(plan_id=plan_id, training_id=train_id)
@@ -628,10 +648,13 @@ def plan_add_train():
 
 @app.route('/del_train_from_plan/<int:plan_trainings_id>')
 def del_train_from_plan(plan_trainings_id):
-    # IMPORTANT редактрировать план только принадлежащий пользователю
 
     plan_training = Plan_Trainings.query.get(plan_trainings_id)
     plan_id = plan_training.plan_id
+    if Plan.query.get(plan_id).owner != current_user.name:
+        flash('У вас нет прав редактировать этот план!')
+        return redirect(url_for('plans_all'))
+
     db.session.delete(plan_training)
 
     try:
@@ -910,6 +933,8 @@ def statistics():
 def statistic_delete(user_training_id):
 
     user_training = UserTraining.query.get(user_training_id)
+    if user_training.user_id != current_user.id:
+        return redirect(url_for('index'))
 
     user_training_exercices = UserTrainingExercise.query.filter_by(user_training_id=user_training.id).all()
 
@@ -976,7 +1001,7 @@ def management():
 
 
 if __name__ == '__main__':
-    #
+
     # with app.app_context():
     #     try:
     #         db.create_all()

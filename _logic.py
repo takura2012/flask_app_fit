@@ -1,6 +1,6 @@
 # Создайте структуру данных, чтобы хранить информацию об упражнениях, мышцах и нагрузке.
 # Загрузите данные из вашей базы данных в эту структуру
-import random, config
+import random, config, re
 from datetime import datetime
 import requests
 from _models import Exercise, Muscle, Training, ExerciseMuscle, TrainingExercise,\
@@ -317,3 +317,14 @@ def get_exercise_statistics(user_id):
 
     # [[55, 'Разогрев+ разминка (10 минут)', 4, 1, [{'date': '28-08-2023 10:03:04', 'weight': 0, 'skipped': False},
     return sorted_struc
+
+
+def contains_mixed_alphabets(name):
+    # Используем регулярное выражение для поиска и совпадения кириллических и латинских символов
+    pattern = re.compile(r'[а-яА-Я]+.*[a-zA-Z]+|[a-zA-Z]+.*[а-яА-Я]+')
+
+    # Если найдено хотя бы одно совпадение, значит, в строке есть и кириллица, и латиница
+    if re.search(pattern, name):
+        return True
+    else:
+        return False

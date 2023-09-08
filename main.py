@@ -63,6 +63,10 @@ def register():
     if request.method == 'POST':
         username = request.form['username']
         password = request.form['password']
+        if contains_mixed_alphabets(username) or username.lower() in config.RESERVED_NAMES or 'admin' in username.lower():
+            flash('Недопустимое имя пользователя')
+            return redirect('register')
+
         hashed_password = generate_password_hash(password)
         email = request.form['email']
         conditions = or_(User.name == username, User.email == email)
@@ -354,7 +358,11 @@ def edit_exercise_in_train(train_id):
 @app.route("/new_train", methods=['POST', 'GET'])
 def new_train():
 
-    conditions = or_(Training.owner == 'admin', Training.owner == current_user.name)
+    if current_user.role != 'admin':
+        conditions = or_(Training.owner == 'admin', Training.owner == current_user.name)
+    else:
+        conditions = or_(Training.owner == 'admin', Training.owner == 'old')
+
     trains_list = Training.query.filter(conditions).all()
     if request.method == 'POST':
         train_name = request.form.get('train_name')
@@ -379,8 +387,20 @@ def new_train():
 def edit_train(train_id):
 
     train = Training.query.get(train_id)  # нахожу тренировку по ID которое передано в роуте
-    if train.owner != current_user.name:
-        return redirect('index')
+
+    if train.owner == 'old':
+        user_trainings = UserTraining.query.filter_by(training_id=train.training_id).all()
+
+        unsorted_train_data = []
+        for user_training in user_trainings:
+            user = User.query.get(user_training.user_id)
+            date = user_training.date_completed
+            date = date.strftime('%Y-%m-%d %H:%M:%S')
+            unsorted_train_data.append({'train':train, 'user':user, 'date':date})
+
+        train_data = sorted(unsorted_train_data, key=lambda utd: utd['date'])
+
+        return render_template('old_train.html', train_data=train_data)
 
     config_filters = config.FILTER_LIST # основные фильтры из конфига (список списков)
     config_filter_targets = config.FILTER_TARGETS   # список фильтров таргета - групп мышц
@@ -460,6 +480,16 @@ def train_delete():
             flash('У вас нет права удалить эту тренировку')
             return redirect(url_for('edit_train', train_id=train_id))
 
+        user_training = UserTraining.query.filter_by(training_id=train_id).first()
+        if user_training:
+            train.owner = 'old'
+            try:
+                db.session.commit()
+            except:
+                flash('Не удалось переместить тренировку в старые')
+                db.session.rollback()
+            return redirect(url_for('new_train'))
+
         user_trains = UserTraining.query.filter_by(training_id=train_id).all()
         user_trains_ids = [user_train.id for user_train in user_trains]
         user_train_exercises = UserTrainingExercise.query.filter(UserTrainingExercise.user_training_id.in_(user_trains_ids)).all()
@@ -474,12 +504,6 @@ def train_delete():
         for plan_train in plan_trains:
             db.session.delete(plan_train)
 
-        # admin_plans = Plan.query.filter_by(owner='admin').all()
-        #
-        # for admin_plan in admin_plans:
-        #     if Plan_Trainings.query.filter_by(plan_id=admin_plan.id).first():
-        #         db.session.delete(admin_plan)
-
         db.session.delete(train)
         try:
             db.session.commit()
@@ -488,6 +512,39 @@ def train_delete():
             return f'Ошибка базы данных: Не удалось удалить тренировку {train.name} (id: {train.training_id})или связанные данные.\n {e}'
 
     return redirect('new_train')
+
+
+@app.route("/del_old_train/<int:train_id>")
+def del_old_train(train_id):
+    if current_user.role != 'admin':
+        flash('Операция запрещена: нет прав')
+        return redirect(url_for('index'))
+
+    train = Training.query.get(train_id)
+    user_trains = UserTraining.query.filter_by(training_id=train_id).all()
+    user_trains_ids = [user_train.id for user_train in user_trains]
+    user_train_exercises = UserTrainingExercise.query.filter(
+        UserTrainingExercise.user_training_id.in_(user_trains_ids)).all()
+
+    for user_train in user_trains:
+        db.session.delete(user_train)
+
+    for user_train_exercise in user_train_exercises:
+        db.session.delete(user_train_exercise)
+
+    plan_trains = Plan_Trainings.query.filter_by(training_id=train_id).all()
+    for plan_train in plan_trains:
+        db.session.delete(plan_train)
+
+    db.session.delete(train)
+    try:
+        db.session.commit()
+    except Exception as e:
+        db.session.rollback()
+        return f'Ошибка базы данных: Не удалось удалить тренировку {train.name} (id: {train.training_id})или связанные данные.\n {e}'
+
+    return redirect(url_for('new_train'))
+
 
 @app.route('/get_exercise_filter_list', methods=['POST', 'GET'])
 def exercise_filter_list():
@@ -513,11 +570,14 @@ def exercise_filter_list():
 @app.route('/plans_all', methods=['POST', 'GET'])
 def plans_all():
 
-    plans = Plan.query.filter_by(owner=current_user.name).all()
-    admin_plans = Plan.query.filter_by(owner='admin').all()
-    plans += admin_plans
-    plan_trainings = Plan_Trainings.query.all()
-    trains = Training.query.all()
+    conditions = or_(Plan.owner == current_user.name, Plan.owner == 'admin')
+    plans = Plan.query.filter(conditions).all()
+    plan_ids = [plan.id for plan in plans]
+
+    plan_trainings = Plan_Trainings.query.filter(Plan_Trainings.plan_id.in_(plan_ids)).all()
+    trainings_ids = [plan_training.training_id for plan_training in plan_trainings]
+    trains = Training.query.filter(Training.training_id.in_(trainings_ids)).all()
+
 
     trainings_in_plan = {}  # {plan: [trains], ...}
 

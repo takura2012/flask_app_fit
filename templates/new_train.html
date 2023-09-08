@@ -4,13 +4,14 @@
 {% endblock %}
 
 {% block body %}
+{% include "/modals/flash_mess.html" %}
 <div class="mt-3">
     <h2>Создание новой тренировки</h2>
 
                     <form method="post">
 
                         <input type="text" name="train_name" id="train_name" class="form-control mb-2" required value="{{train_name}}" placeholder="Название тренировки(например фулбоди для новичка)">
-                        <div class="mb-2 d-flex">
+                        <div class="mb-3 d-flex">
                             <div class="flex-grow-1">
                                 <input type="submit" class="btn btn-success" value="Создать">
                             </div>
@@ -23,17 +24,55 @@
                         </div>
                     </form>
     <hr>
-    <div class="row mb-3 mt-3">
 
-        <h3>Тренировки в базе</h3>
-        {% for train in trains_list %}
-        <div class="col-12">
+    <ul class="nav nav-tabs mb-3 fs-5 fw-semibold" id="pills-tab" role="tablist">
+        <li class="nav-item" role="presentation">
+            <button class="nav-link active" id="user_trains-tab" data-bs-toggle="pill" data-bs-target="#user_trains" type="button" role="tab" aria-controls="user_trains" aria-selected="true">Личные</button>
+        </li>
+        <li class="nav-item" role="presentation">
+            <button class="nav-link" id="pills-common-tab" data-bs-toggle="pill" data-bs-target="#common" type="button" role="tab" aria-controls="common" aria-selected="false">Общие</button>
+        </li>
+        {% if current_user.role == 'admin' %}
+        <li class="nav-item" role="presentation">
+            <button class="nav-link" id="pills-old-tab" data-bs-toggle="pill" data-bs-target="#old" type="button" role="tab" aria-controls="old" aria-selected="false">Устаревшие</button>
+        </li>
+        {% endif %}
+    </ul>
+    <div class="tab-content" id="tabContent">
+        <div class="tab-pane fade show active" id="user_trains" role="tabpanel" aria-labelledby="pills-user_trains-tab" tabindex="0">
 
-            <a href="/edit_train/{{train.training_id}}">{{train.name}}</a>
+                {% for train in trains_list %}
+                    <div class="fs-5 mb-2">
+                        {% if train.owner == current_user.name %}
+                        <a href="/edit_train/{{train.training_id}}" class="link-underline link-underline-opacity-0">{{train.name}}</a>
+                        {% endif %}
+                    </div>
+                {% endfor %}
 
         </div>
-        {% endfor %}
+        <div class="tab-pane fade" id="common" role="tabpanel" aria-labelledby="pills-common-tab" tabindex="0">
+            {% for train in trains_list %}
+                    <div class="fs-5 mb-2">
+                        {% if train.owner == "admin" %}
+                        <a href="/edit_train/{{train.training_id}}" class="link-underline link-underline-opacity-0">{{train.name}}</a>
+                        {% endif %}
+                    </div>
+                {% endfor %}
+        </div>
+        {% if current_user.role == 'admin' %}
+        <div class="tab-pane fade" id="old" role="tabpanel" aria-labelledby="pills-old-tab" tabindex="0">
+            {% for train in trains_list %}
+                    <div class="fs-5 mb-2">
+                        {% if train.owner == "old" %}
+                            <a href="/edit_train/{{train.training_id}}">{{train.name}}</a>
+                        {% endif %}
+                    </div>
+                {% endfor %}
+        </div>
+        {% endif %}
     </div>
+
+
 </div>
 
 

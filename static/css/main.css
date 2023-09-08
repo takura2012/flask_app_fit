@@ -137,3 +137,15 @@ body {
     background-color: rgba(255,255,240, 0.8);
     /* Другие стили, если необходимо */
 }
+
+.nav-tabs .nav-item .nav-link {
+    color: black;
+}
+
+/* Стили для активной закладки (ваш селектор) */
+.nav-tabs .nav-item .nav-link.active {
+    /* Ваши стили для активной закладки */
+    background-color: rgba(255,255,240, 0); /* Пример: изменение цвета фона */
+    border-bottom: solid black;
+    border-width: 1px;
+}

@@ -12,11 +12,13 @@
             </div>
 
             <div class="mb-2">
-                <a href="/new_train" class="stretched fs-5 fw-semibold btn btn-secondary">Тренировки</a>
-            </div>
-            <div class="mb-2">
                 <a href="/plans_all" class="stretched fs-5 fw-semibold btn btn-secondary">Планы</a>
             </div>
+
+            <div class="mb-2">
+                <a href="/new_train" class="stretched fs-5 fw-semibold btn btn-secondary">Тренировки</a>
+            </div>
+
             {% if user.role == 'admin' %}
             <div class="mb-2">
                 <a href="/migration" class="stretched fs-5 fw-semibold btn btn-secondary">База</a>

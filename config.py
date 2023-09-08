@@ -2,6 +2,7 @@ DEBUG = True
 SECRET_KEY = 'some_ha5sh_#_keyidkK'
 SQLALCHEMY_DATABASE_URI = 'sqlite:///fitness.db'
 SESSION_TYPE = 'filesystem'
+RESERVED_NAMES = ['admin', 'administrator', 'админ', 'администратор', 'old']
 TRAINING_LEVELS = {
     '1': 'Не занимался ранее',
     '2': 'Легкие тренировки/восстановление',

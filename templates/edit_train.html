@@ -16,7 +16,7 @@
 
             <div class="col-4">
                 <a href="/new_train" class="mx-3 link-primary link-offset-2 link-underline-opacity-25 link-underline-opacity-100-hover">Вернуться</a>
-                {% if train.owner == current_user.name %}
+                {% if train.owner == current_user.name or current_user.role == "admin" %}
                     <a href="#" data-bs-toggle="modal" data-bs-target="#rename_train" class="mx-3 link-success link-offset-2 link-underline-opacity-25 link-underline-opacity-100-hover">Переименовать</a>
                     <a href="#" data-bs-toggle="modal" data-bs-target="#delete_train" class="mx-3 link-danger link-offset-2 link-underline-opacity-25 link-underline-opacity-100-hover">Удалить</a>
                 {% endif %}
@@ -52,7 +52,7 @@
                     {{te_info[1]}}x{{te_info[2]}} ({{te_info[0].time_per_set*te_info[1]}} мин.)
                 </div>
                 <div class="col-2">
-                    {% if train.owner == current_user.name %}
+                    {% if train.owner == current_user.name or current_user.role == "admin" %}
                     <button type="button" class="btn btn-outline-primary btn-sm" data-bs-toggle="modal" data-bs-target="#confirmDelete{{ te_info[0].exercise_id }}">Редактировать</button>
                     <form action="/edit_exercise_in_train/{{train.training_id}}" method="post">
                         {% include "/modals/modal_del_exercise_from_train.html" %}
@@ -74,7 +74,7 @@
 {% endif %}
 </section>
 <hr>
-{% if train.owner == current_user.name %}
+{% if train.owner == current_user.name or current_user.role == "admin" %}
     <!-- Раздел Фильтры -->
     <form action="/get_exercise_filter_list" method="post">
 
@@ -156,8 +156,10 @@
     </form>
 {% endif %}
 
-{% if train.owner != current_user.name %}
-    <span class="text-primary">Вы не имеете права редактировать эту тренировку</span>
+{% if current_user.role != "admin" %}
+    {% if train.owner != current_user.name %}
+        <span class="text-primary">Вы можете редактрировать только личные тренировки и планы</span>
+    {% endif %}
 {% endif %}
 
 

@@ -142,6 +142,7 @@ class UserTraining(db.Model):
     completed = Column(db.Boolean, default=False)
     date_started = Column(db.DateTime)
     date_completed = Column(db.DateTime)
+    train_note = Column(db.String, default='')
 
     user = relationship('User', back_populates='trainings')
     training = relationship('Training', back_populates='user_trainings')

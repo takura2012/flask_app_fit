@@ -14,10 +14,11 @@
                 <div class="col">Максимальный вес в упражнении: {{max_weight}} кг</div>
             </div>
             {% endif %}
+            {% if exercise.target not in ['Кардио', 'Разминка', 'Пресс'] %}
             <div class="row mx-2 mt-4">
                 <div class="col fw-semibold">Выполняется с весом, кг</div>
             </div>
-
+            {% endif %}
 
         <form action="/train_progress_next" method="post">
             <div class="row mx-2">

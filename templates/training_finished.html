@@ -4,16 +4,18 @@
 {% endblock %}
 
 {% block body %}
-<div class="container text-center">
+<div class="container text-center m-3">
 <h3>Тренировка завершена!</h3>
 </div>
-
-<a href="/statistics" class="statistics-btn d-inline-flex p-2 fw-bold fs-6 link-underline link-underline-opacity-0">
+<div class="mb-3">
+    <a href="/statistics" class="statistics-btn d-inline-flex p-2 fw-bold fs-6 link-underline link-underline-opacity-0">
     Статистика
 </a>
 <a href="/" class="statistics-btn d-inline-flex p-2 fw-bold fs-6 link-underline link-underline-opacity-0">
     Главная
 </a>
+</div>
+
 
 <div class="row mb-0 fs-5">
         <div class="col mb-0 px-3 fw-semibold">
@@ -33,7 +35,6 @@
         <div class="col fw-semibold">
             {{loop.index}}. {{ex.ex_name}}
         </div>
-
         <div class="col mb-0 fw-semibold text-center">
             {% if not ex.ex_skipped %} <span class="text-success">Завершено</span> {% else %} <span class="text-danger">Пропущено</span> {% endif %}
         </div>
@@ -42,9 +43,19 @@
                 {{ex.weight}} кг
             {% endif %}
         </div>
-
     </div>
-
 {% endfor %}
-
+<hr>
+<form action="/note_save" method="post">
+    <div class="text-primary-emphasis mb-2" id="notes_div">
+        Заметка к тренировке:
+    </div>
+    <div class="mb-2">
+        <textarea name="train_note" id="train_note" class="form-control bg-white-op-50" rows="4">{{train_note}}</textarea>
+    </div>
+    <div class="">
+        <input type="hidden" name="user_training_id" value="{{user_training_id}}">
+        <input type="submit" class="btn btn-outline-success" value="Сохранить заметку">
+    </div>
+</form>
 {% endblock %}

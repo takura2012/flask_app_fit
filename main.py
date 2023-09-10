@@ -1,4 +1,4 @@
-from flask import Flask, render_template, url_for, request, redirect, session, flash
+from flask import Flask, render_template, url_for, request, redirect, session, flash, jsonify
 from flask_migrate import Migrate
 from flask_sqlalchemy import SQLAlchemy
 from collections import Counter
@@ -604,6 +604,19 @@ def plan_new(plan_id):
     conditions = or_(Training.owner == 'admin', Training.owner == current_user.name)
     trainings = Training.query.filter(conditions).all()
 
+    plan = Plan.query.get(plan_id)
+    plan_trainings = Plan_Trainings.query.filter_by(plan_id=plan_id).all()
+
+    all_plan_trainings = []
+    train_ids = [plan_training.training_id for plan_training in plan_trainings]
+
+    for plan_training in plan_trainings:
+        if plan_training.training_id in train_ids:
+            train = Training.query.get(plan_training.training_id)
+            all_plan_trainings.append([train, plan_training.id])
+
+
+
     if request.method == 'POST' and plan_id == 0:
         plan_name = request.form.get('plan_name')
 
@@ -625,10 +638,10 @@ def plan_new(plan_id):
             flash('У вас нет прав редактировать этот план!')
             return redirect(url_for('plans_all'))
 
-    plan_trainings = Plan_Trainings.query.filter_by(plan_id=plan.id).all()
 
 
-    return render_template('plan_new.html', trainings=trainings, plan=plan, plan_trainings=plan_trainings)
+    return render_template('plan_new.html', trainings=trainings, plan=plan, plan_trainings=plan_trainings, plan_id=plan.id, all_plan_trainings=all_plan_trainings)
+
 
 
 @app.route('/plan_rename', methods=['POST', 'GET'])
@@ -680,8 +693,8 @@ def plan_delete(plan_id):
 def plan_add_train():
 
     if request.method == 'POST':
-        plan_id = request.form.get('plan_id_hidden')
-        train_id = request.form.get('train_id_hidden')
+        plan_id = request.form.get('hidden_plan_id')
+        train_id = request.form.get('hidden_train_id')
         plan = Plan.query.get(plan_id)
         train = Training.query.get(train_id)
 
@@ -698,10 +711,6 @@ def plan_add_train():
         except Exception as e:
             db.session.rollback()
             return f'Ошибка: не удалось записать в базу добавленные тренировки ---- {e}'
-
-        # plan_trainings = Plan_Trainings.query.filter_by(plan_id=plan.id).all()
-        # for plan_train in plan_trainings:
-        #     print(plan_train.plan_id, plan_train.training_id)
 
     return redirect(url_for('plan_new', plan_id=plan_id))
 
@@ -920,7 +929,7 @@ def train_progress_next():
                 weight = ute.weight
                 finish_data.append({'ex_id':ex_id, 'ex_name':ex_name, 'ex_skipped':ex_skipped, 'weight':weight})
 
-            return render_template('training_finished.html', finish_data=finish_data)
+            return render_template('training_finished.html', finish_data=finish_data, train_note='', user_training_id=user_training_id)
 
         url = url_for('train_progress_start', _external=True)  # URL целевого роута
         payload = {
@@ -958,6 +967,23 @@ def train_progress_skip():
     response = requests.post(url, payload)
 
     return response.content
+
+
+@app.route('/note_save', methods=['POST', 'GET'])
+def note_save():
+    user_training_id = request.form.get('user_training_id')
+    train_note = request.form.get('train_note')
+    user_training = UserTraining.query.get(user_training_id)
+    user_training.train_note = train_note
+
+    try:
+        db.session.commit()
+    except:
+        db.session.rollback()
+        return 'Не удалось сохранить заметку в базу '
+
+
+    return redirect(url_for('statistic_details', user_training_id=user_training_id))
 
 
 @app.route('/statistics')
@@ -1014,8 +1040,10 @@ def statistic_delete(user_training_id):
 
 @app.route('/statistics/details/<int:user_training_id>')
 def statistic_details(user_training_id):
-
+    user_training = UserTraining.query.get(user_training_id)
+    train_note = user_training.train_note
     user_training_exercises = UserTrainingExercise.query.filter_by(user_training_id=user_training_id).all()
+
     finish_data = []
     for ute in user_training_exercises:
         ex = Exercise.query.get(ute.exercise_id)  # для ссылки на статистику упражнений
@@ -1025,7 +1053,7 @@ def statistic_details(user_training_id):
         weight = ute.weight
         finish_data.append({'ex_id': ex_id, 'ex_name': ex_name, 'ex_skipped': ex_skipped, 'weight': weight})
 
-    return render_template('training_finished.html', finish_data=finish_data)
+    return render_template('training_finished.html', finish_data=finish_data, train_note=train_note, user_training_id=user_training_id)
 
 
 @app.route('/statistics/exercises', methods=['POST', 'GET'])

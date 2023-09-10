@@ -9,7 +9,8 @@
     <div class="py-3 fs-4">
         <p>Редактировать личные данные ({{user.name}})</p>
         <div class="mb-2">
-            <a href="/user_logout" class="fs-5 fw-semibold btn btn-danger">Выйти</a>
+            <a href="/user_logout" class=" btn btn-danger">Выйти</a>
+            <input type="button" id="load_btn" class="btn btn-primary" value="LOAD JQ"></input>
         </div>
     </div>
 {% else %}
@@ -20,4 +21,10 @@
 <div class=" fs-3">
 <a href="/index">Вернуться</a>
 </div>
+<div class="" id="div_for_jquery">
+
+</div>
+
+
+
 {% endblock %}

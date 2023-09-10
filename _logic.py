@@ -190,6 +190,10 @@ def assign_plan_to_user(user, plan_id):
 def del_current_user_plan(user):
 
     user_trainings = UserTraining.query.filter_by(user_id=user.id, assigned=True, completed=False).all()
+    user_trainings_ids = [ut.id for ut in user_trainings]
+    user_training_exercises = UserTrainingExercise.query.filter(UserTrainingExercise.user_training_id.in_(user_trainings_ids)).all()
+    for user_training_exercise in user_training_exercises:
+        db.session.delete(user_training_exercise)
     for user_training in user_trainings:
         db.session.delete(user_training)
 

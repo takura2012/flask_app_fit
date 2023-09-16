@@ -357,7 +357,7 @@ def send_email(target_email, new_password, user_name):
     # Настройки SMTP сервера Gmail
     smtp_server = 'smtp-relay.sendinblue.com'
     smtp_port = 587
-    smtp_username = 'takura2012@gmail.com'
+    smtp_username = ''
     smtp_password = 'mTFKgAQc6SVN8s4b'
 
     # Адрес отправителя и получателя

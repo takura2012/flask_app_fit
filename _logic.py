@@ -1,13 +1,18 @@
-# Создайте структуру данных, чтобы хранить информацию об упражнениях, мышцах и нагрузке.
-# Загрузите данные из вашей базы данных в эту структуру
 import random, config, re
+import string
 from datetime import datetime
 import requests
+from flask_login import current_user
+
 from _models import Exercise, Muscle, Training, ExerciseMuscle, TrainingExercise,\
     Plan, UserTraining, UserTrainingExercise, Plan_Trainings, User
 from typing import List
 from sqlalchemy import or_, desc
 from main import db
+
+import smtplib
+from email.mime.text import MIMEText
+from email.mime.multipart import MIMEMultipart
 
 
 # функция вернет список объектов Exercise сумма difficulty у которых будет не превышать max_effort по жадному алгоритму (начиная с больших)
@@ -133,7 +138,7 @@ def generate_unique_train_name(base_name):
     name = base_name
     counter = 1
 
-    while Training.query.filter_by(name=name).first():
+    while Training.query.filter_by(name=name, owner=current_user.name).first():
         name = f"{base_name}({counter})"
         counter += 1
 
@@ -292,8 +297,11 @@ def find_max_weight(exercise_id, user_id):
 
 def get_exercise_statistics(user_id):
 
+
+
     exercises_struct = {}
     user_trainings = UserTraining.query.filter_by(user_id=user_id, completed=True).all()
+
     for user_training in user_trainings:
         user_training_exercises = UserTrainingExercise.query.filter_by(user_training_id=user_training.id).all()
         for user_training_exercise in user_training_exercises:
@@ -315,7 +323,7 @@ def get_exercise_statistics(user_id):
         ex_name = ex.name
         count = len(data)
         skipped_count = len(list(filter(lambda item: item['skipped'], data)))
-        struc.append([ex_id, ex_name, count, skipped_count, data])
+        struc.append([ex_id, ex_name, count, skipped_count, data, ex.target])
 
     sorted_struc = sorted(struc, key=lambda struc: struc[2], reverse=True)
 
@@ -332,3 +340,77 @@ def contains_mixed_alphabets(name):
         return True
     else:
         return False
+
+
+def is_valid_email(email):
+    # Регулярное выражение для проверки адреса электронной почты
+    pattern = r'^[\w\.-]+@[\w\.-]+\.\w+$'
+
+    # Используем метод match() для сравнения строки с регулярным выражением
+    if re.match(pattern, email):
+        return True
+    else:
+        return False
+
+
+def send_email(target_email, new_password, user_name):
+    # Настройки SMTP сервера Gmail
+    smtp_server = 'smtp-relay.sendinblue.com'
+    smtp_port = 587
+    smtp_username = 'takura2012@gmail.com'
+    smtp_password = 'mTFKgAQc6SVN8s4b'
+
+    # Адрес отправителя и получателя
+    sender_email = 'fitness-app@volia.com'
+    recipient_email = target_email
+
+    # Создание объекта MIMEMultipart
+    message = MIMEMultipart()
+    message['From'] = sender_email
+    message['To'] = recipient_email
+    message['Subject'] = 'От фитнес-приложения, ваш временный пароль.'
+
+    # Текст письма
+    message_text = ''
+    message_html = f"""/
+    <html>
+        <head>
+        </head>
+        <body style="background-color: #FAFAD2;">
+        <div>
+            <p>Привет, {user_name}!</p>
+            <p>Вы запросили письмо о восстановлении пароля<p>
+            <p>Ваш новый пароль <strong>{new_password}</strong></p>
+            <p>Не забудьте сменить его в личном кабинете!</p>
+            <br>
+            <br>
+            <p><i>С уважением, разработчики приложения FitApp</i></p>
+        </div>
+        </body>
+    </html>
+    """
+    textPart = MIMEText(message_text, 'plain')
+    htmlPart = MIMEText(message_html, 'html')
+    message.attach(textPart)
+    message.attach(htmlPart)
+
+    # Подключение к серверу SMTP
+    with smtplib.SMTP(smtp_server, smtp_port) as server:
+        server.starttls()  # Включение TLS (шифрование)
+        server.login(smtp_username, smtp_password)
+
+        # Отправка письма
+        server.sendmail(sender_email, recipient_email, message.as_string())
+
+    print('Письмо успешно отправлено.')
+    return None
+
+
+def generate_random_password(length=6):
+    # Определите символы, из которых будет создаваться пароль
+    characters = string.ascii_letters + string.digits  # латинские буквы и цифры
+
+    # Генерируйте случайные символы заданной длины
+    password = ''.join(random.choice(characters) for _ in range(length))
+
+    return password

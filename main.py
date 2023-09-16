@@ -16,6 +16,7 @@ from werkzeug.security import generate_password_hash, check_password_hash
 import uuid
 
 
+
 app = Flask(__name__)
 app.config.from_object('config')
 
@@ -99,26 +100,6 @@ def index():
         return render_template("index.html", current_user=current_user)
 
     return render_template("index.html", uncompleted_user_trainings=uncompleted_user_trainings, current_user=current_user)
-
-
-@app.route('/usefilter', methods=['POST'])
-def usefilter():
-    const_config = {}
-    const_config['filter_list'] = config.FILTER_LIST
-
-    index_dict = session.get('index_dict', {})  # беру из сессии
-
-    if 'filter_list' not in index_dict: # если нет ключа то назначаю по умолчанию
-        index_dict['filter_list'] = ['1','4','7','8']
-
-    if request.method == 'POST':    # если принимаются данные с формы
-        index_dict['filter_list'] = []
-        for i in range(len(const_config['filter_list'])):
-            index_dict['filter_list'].append(request.form.getlist('filters' + str(i + 1)))  # снимаю фильтрі в списки
-
-    session['index_dict'] = index_dict
-
-    return redirect('index')
 
 # ------------------------------------------------BASE----------------------------------------------------------------
 
@@ -289,6 +270,10 @@ def train_add_ex():
         sets = request.form.get('sets')
         reps = request.form.get('reps')
 
+        target_filter = request.form.get('target_filter', '-1')
+        exercise_filter_list_json = request.form.get('exercise_filter_list_input')
+        exercise_filter_list = [inner_list.split(',') for inner_list in exercise_filter_list_json.split(';')]
+
         # ищу в таблице связей training_exercise по тренировке и упражнениям
         training_exercise = TrainingExercise.query.filter_by(training_id = train_id, exercise_id = int(ex_id)).first()
         if not training_exercise:   # добавлю в базу только если не существует такого
@@ -303,6 +288,12 @@ def train_add_ex():
             except Exception as e:
                 db.session.rollback()
                 return f'Ошибка добавления в базу training_exercise {e}'
+
+        exercise_filter_list_str = json.dumps(exercise_filter_list)
+
+        url = url_for('edit_train', train_id=train_id, target_filter=target_filter,
+                      exercise_filter_list_str=exercise_filter_list_str)
+        return redirect(url)
 
     return redirect(url_for('edit_train', train_id=train_id))
 
@@ -376,8 +367,6 @@ def new_train():
             db.session.rollback()
             return 'Ошибка при создании новой тренировки (не сохранились изменения в базе)'
 
-        session['train'] = new_train
-
         return redirect(url_for('edit_train', train_id=new_train.training_id))
 
     return render_template('new_train.html', trains_list=trains_list)
@@ -404,8 +393,14 @@ def edit_train(train_id):
 
     config_filters = config.FILTER_LIST # основные фильтры из конфига (список списков)
     config_filter_targets = config.FILTER_TARGETS   # список фильтров таргета - групп мышц
-    exercise_filter_list = session.get('exercise_filter_list', [])  # загрузка списка фильтров из сессии, или пустой
-    target_filter = session.get('target_filter','-1')   # загрузка фильтра таргета из сессии, по умолч -1 (все)
+    exercise_filter_list_str = request.args.get('exercise_filter_list_str')
+    if exercise_filter_list_str:
+        exercise_filter_list = json.loads(exercise_filter_list_str)
+    else:
+        exercise_filter_list = []
+
+    exercise_filter_list_json = ';'.join([','.join(sublist) for sublist in exercise_filter_list])
+    target_filter = request.args.get('target_filter', '-1')
 
     # Создаем список условий для каждой группы фильтров - хз как оно работате делал чатГПТ. главное работает
     group_conditions = []
@@ -427,10 +422,8 @@ def edit_train(train_id):
         exercises = filtered_exercises  # если фильтр -1 (все) то не фильтрую
 
     if train:
-        session['train'] = train
         te_info_list = get_training_connections(train.training_id) # функция для получения связанных с тренировкой полей
         # te_info_list = [[Exercise, sets, repetitions, weight], [...], ...]    -
-        session['te_info_list'] = te_info_list
     total_time = 0
     for te_info in te_info_list:
         total_time += te_info[0].time_per_set * te_info[1]
@@ -438,7 +431,8 @@ def edit_train(train_id):
 
     return render_template('edit_train.html', train=train, te_info_list=te_info_list,
                            exercises=exercises, config_filters=config_filters, exercise_filter_list=exercise_filter_list,
-                           config_filter_targets=config_filter_targets, target_filter=target_filter, total_time=total_time)
+                           config_filter_targets=config_filter_targets, target_filter=target_filter, total_time=total_time,
+                           train_id=train_id, exercise_filter_list_json=exercise_filter_list_json)
 
 
 @app.route('/train_rename', methods=['POST', 'GET'])
@@ -549,22 +543,20 @@ def del_old_train(train_id):
 @app.route('/get_exercise_filter_list', methods=['POST', 'GET'])
 def exercise_filter_list():
     config_filters = config.FILTER_LIST
-    try:
-        train = session['train']
-    except:
-        return '<h1>Ошибка: Тренировка не найдена</h1>'
-    train_id = train.training_id
+
     exercise_filter_list = []
 
-    if request.method == 'POST':    # если принимаются данные с формы беру фильтры и сохраняю в сессии
+    if request.method == 'POST':
+        train_id = int(request.form.get('train_id'))
         for i in range(len(config_filters)):
             exercise_filter_list.append(request.form.getlist('filters' + str(i + 1)))  # снимаю фильтрі в списки
 
-        session['exercise_filter_list'] = exercise_filter_list
+        exercise_filter_list_str = json.dumps(exercise_filter_list)
         target_filter = request.form.get('select_target')
-        session['target_filter'] = target_filter
 
-    return redirect(url_for('edit_train', train_id=train_id))
+    url = url_for('edit_train', train_id=train_id, target_filter=target_filter, exercise_filter_list_str=exercise_filter_list_str)
+    return redirect(url)
+
 
 # ------------------------------------------------PLANS----------------------------------------------------------------
 @app.route('/plans_all', methods=['POST', 'GET'])
@@ -641,7 +633,6 @@ def plan_new(plan_id):
 
 
     return render_template('plan_new.html', trainings=trainings, plan=plan, plan_trainings=plan_trainings, plan_id=plan.id, all_plan_trainings=all_plan_trainings)
-
 
 
 @app.route('/plan_rename', methods=['POST', 'GET'])
@@ -733,69 +724,73 @@ def del_train_from_plan(plan_trainings_id):
         return 'Ошибка: не удалось удалить связь плана и тренировки'
 
     return redirect(url_for('plan_new', plan_id=plan_id))
+
+
 # ------------------------------------------------LOGIC----------------------------------------------------------------
 @app.route('/logic', methods=['POST', 'GET'])
 def logic():
-    excluded = session.get('excluded', [])
-    selected_result = session.get('selected_result', [])
-    max_effort = session.get('max_effort', [70])
-    targets_list = session.get('targets_list', [])
-    excluded_exercises = []
-    all_muscles = {}
+#     excluded = session.get('excluded', [])
+#     selected_result = session.get('selected_result', [])
+#     max_effort = session.get('max_effort', [70])
+#     targets_list = session.get('targets_list', [])
+#     excluded_exercises = []
+#     all_muscles = {}
+#
+#
+#     exercises = Exercise.query.all()
+#
+#     selected_result = select_exercises(targets_list, max_effort, excluded)
+#     excluded_exercises = Exercise.query.filter(Exercise.exercise_id.in_(excluded)).all()
+#
+#     if request.method == 'POST':
+#         try:
+#             max_effort = int(request.form['max_effort'])    # можно попробовать скалировать max_effort от повторений
+#         except ValueError:
+#             max_effort = 70
+#         targets_list = request.form.getlist('target')
+#
+#         selected_result = select_exercises(targets_list, max_effort, excluded)
+#         excluded_exercises = Exercise.query.filter(Exercise.exercise_id.in_(excluded)).all()
+#
+#         session['selected_result'] = selected_result
+#         session['max_effort'] = max_effort
+#         session['targets_list'] = targets_list
+#
+#     all_muscles = count_muscles(selected_result)
+#
+#
+#     return render_template('logic.html', exercises=exercises, selected_result=selected_result, max_effort=max_effort,
+#                            targets_list=targets_list, excluded_exercises=excluded_exercises, all_muscles=all_muscles)
 
-
-    exercises = Exercise.query.all()
-
-    selected_result = select_exercises(targets_list, max_effort, excluded)
-    excluded_exercises = Exercise.query.filter(Exercise.exercise_id.in_(excluded)).all()
-
-    if request.method == 'POST':
-        try:
-            max_effort = int(request.form['max_effort'])    # можно попробовать скалировать max_effort от повторений
-        except ValueError:
-            max_effort = 70
-        targets_list = request.form.getlist('target')
-
-        selected_result = select_exercises(targets_list, max_effort, excluded)
-        excluded_exercises = Exercise.query.filter(Exercise.exercise_id.in_(excluded)).all()
-
-        session['selected_result'] = selected_result
-        session['max_effort'] = max_effort
-        session['targets_list'] = targets_list
-
-    all_muscles = count_muscles(selected_result)
-
-
-    return render_template('logic.html', exercises=exercises, selected_result=selected_result, max_effort=max_effort,
-                           targets_list=targets_list, excluded_exercises=excluded_exercises, all_muscles=all_muscles)
-
-
-@app.route('/logic/exclude/<int:ex_id>', methods=['POST', 'GET'])   # добавить в исключения
-def logic_exclude(ex_id):
-
-    excluded = session.get('excluded', [])
-    if ex_id in excluded:
-        return redirect(url_for('logic'))
-
-    excluded.append(ex_id)
-    # exercises = Exercise.query.all()
-
-    session['excluded'] = excluded
-
-    selected_result = session.get('selected_result', [])
-    max_effort = session.get('max_effort', [])
-    targets_list = session.get('targets_list', [])
-    # print(excluded)
-    return redirect(url_for('logic'))
-
-
-@app.route('/logic/retrieve/<int:ex_id>')   # удалить из исключений
-def logic_retrieve(ex_id):
-    excluded = session.get('excluded', [])
-    if ex_id in excluded:
-        excluded.remove(ex_id)
-    session['excluded'] = excluded
-    return redirect(url_for('logic'))
+    return '<h1>Отключено</h1>'
+#
+#
+# @app.route('/logic/exclude/<int:ex_id>', methods=['POST', 'GET'])   # добавить в исключения
+# def logic_exclude(ex_id):
+#
+#     excluded = session.get('excluded', [])
+#     if ex_id in excluded:
+#         return redirect(url_for('logic'))
+#
+#     excluded.append(ex_id)
+#     # exercises = Exercise.query.all()
+#
+#     session['excluded'] = excluded
+#
+#     selected_result = session.get('selected_result', [])
+#     max_effort = session.get('max_effort', [])
+#     targets_list = session.get('targets_list', [])
+#     # print(excluded)
+#     return redirect(url_for('logic'))
+#
+#
+# @app.route('/logic/retrieve/<int:ex_id>')   # удалить из исключений
+# def logic_retrieve(ex_id):
+#     excluded = session.get('excluded', [])
+#     if ex_id in excluded:
+#         excluded.remove(ex_id)
+#     session['excluded'] = excluded
+#     return redirect(url_for('logic'))
 
 
 @app.route('/migration')
@@ -1058,25 +1053,82 @@ def statistic_details(user_training_id):
 
 @app.route('/statistics/exercises', methods=['POST', 'GET'])
 def statistics_exercises():
-
+    no_weight_targets = config.NO_WEIGHT_TARGETS
     if request.method == 'POST':
-        # взял с формы ИД юзера
+
         user_id = request.form.get('user_id')
         trains_count = request.form.get('trains_count')
-
+        include_noweights = True
         exercises_struct = get_exercise_statistics(user_id)
         # [[55, 'Разогрев+ разминка (10 минут)', 4, 1, [{'date': '28-08-2023 10:03:04', 'weight': 0, 'skipped': False},
 
-    return render_template('statistics_exercises.html', exercises_struct=exercises_struct, user_id=user_id, trains_count=trains_count)
 
+    return render_template('statistics_exercises.html', exercises_struct=exercises_struct, user_id=user_id, trains_count=trains_count, no_weight_targets=no_weight_targets)
+
+
+# ---------------------------------------ACCOUNT -------------------------------------------------------------
 
 @app.route('/personal')
 def personal():
+    account_types = config.ACCOUNT_TYPES_RU
 
     if not current_user:
         return render_template('management.html')
+    user_account_type = account_types[current_user.role]
+    account_color = config.ACCOUNT_COLORS[current_user.role]
+    return render_template('personal.html', user=current_user, user_account_type=user_account_type, account_color=account_color)
 
-    return render_template('personal.html', user=current_user)
+
+@app.route('/change_password', methods=['POST', 'GET'])
+def change_password():
+
+    if request.method == 'POST':
+        password = request.form.get('old_password')
+        new_password = request.form.get('new_password')
+        repeat_new_password = request.form.get('repeat_new_password')
+
+        hashed_password = generate_password_hash(password)
+
+        if check_password_hash(current_user.password, password):
+            if new_password == repeat_new_password:
+                hashed_password = generate_password_hash(new_password)
+                current_user.password = hashed_password
+                try:
+                    db.session.commit()
+                    flash('Пароль успешно изменен!')
+                except:
+                    db.session.rollback()
+                    flash('Не удалось изменить пароль')
+            else:
+                flash('Новый пароль - поля не совпадают')
+        else:
+            flash('Неверный пароль')
+
+
+    return redirect(url_for('personal'))
+
+
+@app.route('/restore_account', methods=['POST', 'GET'])
+def restore_account():
+    if request.method == 'POST':
+        restore_email = request.form.get('restore_email')
+        if not is_valid_email(restore_email):
+            flash('Электронная почта введена некорректно')
+        else:
+            flash('Сообщение с восстановлением выслано')
+            user = User.query.filter_by(email=restore_email).first()
+            if user:
+                new_password = generate_random_password(8)
+                hashed_password = generate_password_hash(new_password)
+                user.password = hashed_password
+                try:
+                    db.session.commit()
+                except:
+                    flash('Произошла ошибка при восстановлении пароля')
+                send_email(restore_email, new_password, user.name)
+            return redirect('user_login')
+
+    return render_template('/modals/restore_account.html')
 
 
 @app.route('/management')
@@ -1085,7 +1137,28 @@ def management():
     if not current_user:
         return render_template('management.html')
 
+
     return render_template('management.html', user=current_user)
+
+
+@app.route('/ajax_plan_training_view', methods=['POST', 'GET'])
+def ajax_plan_training_view():
+
+    data = request.get_json()
+
+    train_id = data.get('train_id')
+    train = Training.query.get(train_id)
+    exercises = train.exercises
+    response = []
+
+    for exercise in exercises:
+        training_exercises = TrainingExercise.query.filter_by(training_id=train_id, exercise_id=exercise.exercise_id).first()
+        response.append([exercise.name, training_exercises.sets, training_exercises.repetitions])
+
+    return render_template('/divs/plan_trainings_div.html', response=response)
+
+
+
 
 
 if __name__ == '__main__':

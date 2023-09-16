@@ -94,6 +94,7 @@
             </div>
             <div class="col-2">
                 <input type="submit" class="btn btn-primary" value="Применить фильтры">
+                <input type="hidden" name="train_id" value="{{train_id}}">
 
             </div>
             <div class="col-7">
@@ -141,7 +142,9 @@
                 </div>
                 <div class="col-3">
                     <br>
-                    <input type="submit" class="btn btn-success" value="Добавить упражнение">
+                    <input type="submit" id="" class="btn btn-success" value="Добавить упражнение">
+                    <input type="hidden" name="exercise_filter_list_input" id="exercise_filter_list_input" value={{exercise_filter_list_json}}>
+                    <input type="hidden" name="target_filter" value="{{target_filter}}">
                 </div>
                 </div>
     </form>

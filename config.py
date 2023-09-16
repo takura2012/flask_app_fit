@@ -3,6 +3,28 @@ SECRET_KEY = 'some_ha5sh_#_keyidkK'
 SQLALCHEMY_DATABASE_URI = 'sqlite:///fitness.db'
 SESSION_TYPE = 'filesystem'
 RESERVED_NAMES = ['admin', 'administrator', 'админ', 'администратор', 'old']
+
+ACCOUNT_TYPES_EN = {
+    'user': 'Standart account',
+    'paid_user': 'Paid account',
+    'premium': 'Premium account',
+    'admin': 'admin'
+}
+
+ACCOUNT_COLORS = {
+    'user': '#202050',
+    'paid_user': '#32CD32',
+    'premium': '#4169E1',
+    'admin': '#DC143C'
+}
+
+ACCOUNT_TYPES_RU = {
+    'user': 'Обычный аккаунт',
+    'paid_user': 'Оплаченный аккаунт',
+    'premium': 'Премиум аккаунт',
+    'admin': 'Администратор'
+}
+
 TRAINING_LEVELS = {
     '1': 'Не занимался ранее',
     '2': 'Легкие тренировки/восстановление',
@@ -20,7 +42,9 @@ BMI = {
     100: 'Ожирение 3 степени'
 }
 
-TARGETS = ['Ноги', 'Спина', 'Грудь', 'Бицепс', 'Трицепс', 'Плечи', 'Кардио', 'Разминка', 'Пресс', 'Ягодицы']
+TARGETS = ['Разминка', 'Пресс', 'Ноги', 'Спина', 'Грудь', 'Ягодицы', 'Бицепс', 'Трицепс', 'Плечи', 'Кардио']
+
+NO_WEIGHT_TARGETS = ['Разминка', 'Пресс', 'Кардио']
 
 FILTERS_LOCATION = {
     '1': 'В зале',
